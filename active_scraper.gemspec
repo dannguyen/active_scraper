@@ -10,8 +10,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Dan Nguyen"]
   s.email       = ["dansonguyen@gmail.com"]
   s.homepage    = "http://github.com/dannguyen/active_scraper"
-  s.summary     = "Using ActiveRecord to cache results of HTTP scrapes"
-  s.description = "Using ActiveRecord to cache results of HTTP scrapes"
+  s.summary     = "A Rails Engine using ActiveRecord to cache results of HTTP scrapes"
+  s.description = "A Rails Engine using ActiveRecord to cache results of HTTP scrapes"
   s.license     = "MIT"
 
   s.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.rdoc"]
