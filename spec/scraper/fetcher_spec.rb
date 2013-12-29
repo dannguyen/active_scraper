@@ -6,6 +6,32 @@ describe ActiveScraper::Fetcher do
     it 'initializes without necessary args' do
       expect(ActiveScraper::Fetcher.new).to be_a ActiveScraper::Fetcher
     end
+
+    it 'can accept a Hash of options' do
+      describe ':http_method' do
+        it 'sets the http_method' do
+          f = Fetcher.new(http_method: :post)
+          expect(f.http_method).to eq :post
+          expect(f.post?).to be_true
+
+        it 'is otherwise :get by default' do
+          f = Fetcher.new
+          expect(f.get?).to be_true 
+        end
+      end
+
+      describe ':last_fetched_by' do
+        it 'sets the last_fetched_by' do
+          f = Fetcher.new(last_fetched_by: 10.days.ago)
+          expect(f.last_fetched_by).to be_within(2).of 10.days.ago
+        end
+
+        it 'is beginning of time by default' do
+          f = Fetcher.new
+          expect(f.last_fetched_by > 10.years.ago).to be_true
+        end
+      end
+    end
   end
 
 
@@ -53,18 +79,12 @@ describe ActiveScraper::Fetcher do
     describe 'three arguments' do
       it 'expects first argument to be a URI/string'
       it 'expects second argument to be additional fetching hash options'
-      it 'expects third argument to be Fetcher specific options'
-    end
-
-    describe 'Fetcher specific options' do
-      describe ':last_fetched_by'
-      describe ':http_method' do
-        it 'is :get by default'
-        it 'accepts :post'
+      it 'expects third argument to be Fetcher specific options' do
+        pending 'need to write tests to show that this overrides Fetcher initialized settings'
       end
-
-
     end
+
+
   end
 
   describe 'integration' do

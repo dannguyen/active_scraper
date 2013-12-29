@@ -9,8 +9,6 @@ describe ActiveScraper::Request do
         @params = ActiveScraper::Request.build_request_params(@url)
       end
 
-      it 'also works with a Addressable::URI'
-
       it 'should set normalized host' do
         expect(@params[:host]).to eq 'www.example.com'
       end
@@ -27,44 +25,102 @@ describe ActiveScraper::Request do
         expect(@params[:extname]).to eq '.json'
       end
 
+      it 'should set :is_obfuscated to false by default' do
+        expect(@params[:is_obfuscated]).to be_false
+      end
+
+      it 'also works with a Addressable::URI' do
+        req_params = Request.build_request_params Addressable::URI.parse(@url)
+        expect(req_params)[:host].to eq 'www.example.com'
+      end
+
+
+
 
       describe 'options argument' do
         before do
-          @options = {}
+          @url = 'http://example.com/path?user=dan&password=helloworld'
         end
 
-        describe ':obfuscate_query' do
-          
-          context 'key is just a key' do
-            it 'should omit the actual value for the given key in @params[:query] with __OMIT__'
+        describe ':obfuscate_query' do        
+          context 'key is just a key' do       
+            before do
+              @req_params = Request.build_request_params @url, { obfuscate_query: [:password] }
+            end
+
+            it 'should omit the actual value for the given key in @params[:query] with __OMIT__' do
+              expect(@req_params[:query]).to eq "user=dan&password=__OMIT__"
+            end
+
+            it 'should set :is_obfuscated to true' do
+              expect(@req_params[:is_obfuscated]).to be_true
+            end
           end
 
           context 'key is an Array' do
-            it 'should replace actual value with __OMIT_[given-value]__'
-          end
+            before do
+              @req_params = Request.build_request_params @url, { obfuscate_query: [:password, 4] }
+            end
 
+            it 'should replace actual value with __OMIT_[last n characters]__' do
+              expect(@req_params[:query]).to eq "user=dan&password=__OMIT__orld"
+            end
+          end
         end
       end
     end
   
     describe '.create_from_uri' do
-      it 'should take in a string' do 
-        pending
-        @req = ActiveScraper::Request.create_from_uri("http://example.com")
-        expect(@req.host).to eq 'example.com'
+      context 'arguments' do
+        it 'should take in a string' do 
+          @req = Request.create_from_uri("http://example.com")
+          expect(@req.host).to eq 'example.com'
+        end
+
+        it 'should take in a URI' do
+          @req = Request.create_from_uri(URI.parse 'http://example.com')
+          expect(@req.host).to eq 'example.com'
+        end
       end
 
-      it 'should take in a URI' do
-        pending
-        @req = ActiveScraper::Request.create_from_uri(URI.parse 'http://example.com')
-        expect(@req.host).to eq 'example.com'
+      context 'return value' do
+        before do
+          @req = Request.create_from_uri("http://example.com/path.html?query=helloworld")
+        end
+
+        it 'should return a ActiveScraper::Request object' do
+          expect(@req).to be_a Request
+          expect(@req.id).to be_present
+        end
+
+        it 'should set the appropriate attributes' do
+          expect(@req.host).to eq 'example.com'
+          expect(@req.path).to eq 'path.html'
+          expect(@req.query).to eq 'query=helloworld'
+          expect(@req.extname).to eq '.html'
+          expect(@req).not_to be_obfuscated
+        end
       end
     end
 
 
     describe '.create_and_fetch_response' do
-      it 'invokes Fetcher#get_fresh to get a response' do
+      context 'arguments' do
+        it 'accepts the same two arguments as .build_request_params'
+        it 'accepts an optional third argument for a Fetcher instance'
+      end
 
+      context 'using Fetcher' do
+        before do
+          @url = 'http://example.com'
+          @f = Fetcher.new
+          @f.stub(:get_fresh)
+        end
+        it 'invokes Fetcher#get_fresh to get a response' do
+
+          pending 'create a webmock'
+          expect(@f).to receive(:get_fresh).with Addressable::URI
+        end
       end
 
       it 'creates a new Request'
