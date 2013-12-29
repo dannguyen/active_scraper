@@ -1,6 +1,7 @@
 require 'addressable/uri'
 module ActiveScraper
   class Request < ActiveRecord::Base
+    has_many :responses, :dependent => :destroy
 
     def self.build_request_params(uri, opts={})
       u = Addressable::URI.parse(uri)
