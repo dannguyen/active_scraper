@@ -6,44 +6,52 @@ module ActiveScraper
       context 'given a regular HTTParty-like object' do
         before do
           @url = "http://www.hello.world.example.com"
+          stub_request(:get, @url).to_return( 
+            :body => "abc", :headers => { 'content-length' => 3, 'content-type'=>'text/html', "server"=>'Apache' }
+          )
+
+          @resp_obj = Fetcher.build_response_object HTTParty.get(@url)
           # set up webmock
-          @response = Response.build_from_response_object(@obj)
+          @response = Response.build_from_response_object(@resp_obj)
         end
 
         it 'should be a Response record' do
+
           expect(@response).to be_a ActiveScraper::Response
         end
 
         it 'should save content_type' do
-          expect(@response.content_type).to eq @obj.content_type
+          expect(@response.content_type).to eq 'text/html'
         end
 
         it 'should save body' do
-          expect(@response.body).to eq @obj.body
+          expect(@response.body).to eq 'abc'
+        end
+
+        it 'should have a status code' do 
+          expect(@response.code).to eq 200
         end
 
         it 'should save headers as a serialized Hash' do
           expect(@response.headers).to be_a Hash
-          expect(@response.headers['Server']).to eq 'Apache'
+          expect(@response.headers['server']).to eq 'Apache'
         end
       end
     end
 
     context 'attributes' do 
-      describe ':checksum' do
-        before do
-          @response = Response.create(body: "x", headers: {'Server' => 'Apache'})
-        end
-        it 'should set checksum after save' do
-          expect(@response.checksum).to eq 'x'.hash
-        end
+      before do
+        @r = Response.create(body: "x", headers: {'Server' => 'Apache'})
       end
 
-      describe ':headers' do
-        it 'should be a serialized hash' do
-          expect(@response.headers['Server'].to eq 'Apache')
-        end
+      it 'should set checksum during save process' do
+        expect(@r.checksum).to eq 'x'.hash
       end
+
+      it 'should be a serialized hash' do
+        expect(@r.headers['Server']).to eq 'Apache'
+      end
+
     end
   end
 end

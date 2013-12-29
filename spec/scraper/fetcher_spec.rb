@@ -126,4 +126,14 @@ describe ActiveScraper::Fetcher do
   end
 
 
+  context 'class methods' do
+    describe '.build_from_response_object' do
+      context 'obj is HTTParty::Response' do
+        it 'should convert headers to_hash'
+      end
+      it 'should work with regular Net::HTTPResponse'
+      it 'should return a blank object in other cases'
+    end
+  end
+
 end

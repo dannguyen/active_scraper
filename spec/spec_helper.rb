@@ -5,10 +5,12 @@ include ActiveScraper
 require "rails/all"
 require 'rspec/rails'
 
+
 require 'pry'
 require 'database_cleaner'
 require 'rspec/autorun'
-
+require 'webmock/rspec'
+require 'httparty'
 
 # VCR.configure do |c|
 #   c.hook_into :webmock # or :fakeweb
