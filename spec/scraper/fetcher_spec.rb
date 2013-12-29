@@ -9,7 +9,7 @@ describe ActiveScraper::Fetcher do
   end
 
 
-  describe 'fetch' do
+  describe 'unitary behavior' do
     before do
       @fetcher = ActiveScraper::Fetcher.new
     end
@@ -42,4 +42,68 @@ describe ActiveScraper::Fetcher do
       end
     end
   end
+
+
+  context 'fetch arguments and options' do
+    describe 'two arguments' do
+      it 'expects first argument to be a URI/string'
+      it 'expects second argument to be Fetcher specific options'
+    end
+
+    describe 'three arguments' do
+      it 'expects first argument to be a URI/string'
+      it 'expects second argument to be additional fetching hash options'
+      it 'expects third argument to be Fetcher specific options'
+    end
+
+    describe 'Fetcher specific options' do
+      describe ':last_fetched_by'
+      describe ':http_method' do
+        it 'is :get by default'
+        it 'accepts :post'
+      end
+
+
+    end
+  end
+
+  describe 'integration' do
+
+    context 'with ActiveRecord store' do
+      describe '#fetch_from_cache' do
+        it 'always fetches latest response'
+        it 'does not alter request'
+        it 'returns nil if matching request is not found'
+      end
+    end
+
+    describe 'convenience methods' do
+      describe 'auto body accessors' do
+        describe '#fetch_body' do
+          it 'should return string'
+        end
+
+        describe '#fetch_parsed_body' do
+          context ':response#content_type is text/html' do
+            it 'should return Nokogiri::XML::Node'
+          end
+
+          context ':response#content_type is xml' do
+            it 'should return Nokogiri::XML::Node'
+          end
+
+          context 'response#content_type is json' do
+            it 'should return Array if applicable'
+            it 'should return Hash'
+          end
+
+          context 'response#content_type is something else' do
+            it 'should return a String'
+          end
+        end
+      end
+    end
+  end
+
+
 end

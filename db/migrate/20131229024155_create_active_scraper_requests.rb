@@ -4,7 +4,8 @@ class CreateActiveScraperRequests < ActiveRecord::Migration
       t.string :host
       t.text :query
       t.string :path
-      t.string :custom_tag
+      t.string :meta_tag
+      t.boolean :is_obfuscated
 
       t.timestamps
     end
