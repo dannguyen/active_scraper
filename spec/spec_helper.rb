@@ -9,6 +9,7 @@ require 'pry'
 require 'database_cleaner'
 require 'rspec/autorun'
 
+
 # VCR.configure do |c|
 #   c.hook_into :webmock # or :fakeweb
 # end
