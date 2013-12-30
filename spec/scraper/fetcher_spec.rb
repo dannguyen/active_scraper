@@ -7,13 +7,14 @@ describe ActiveScraper::Fetcher do
       expect(ActiveScraper::Fetcher.new).to be_a ActiveScraper::Fetcher
     end
 
-    it 'can accept a Hash of options' do
+    context 'can accept a Hash of options' do
       describe ':http_method' do
         it 'sets the http_method' do
           f = Fetcher.new(http_method: :post)
           expect(f.http_method).to eq :post
           expect(f.post?).to be_true
-
+        end
+        
         it 'is otherwise :get by default' do
           f = Fetcher.new
           expect(f.get?).to be_true 

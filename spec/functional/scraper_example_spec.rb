@@ -18,7 +18,8 @@ describe "functional scraping example" do
 
 
   context 'on scrapes when cache is warm' do
-    it 'returns a response'
+    it 'returns existing ActiveScraper::Response object'
+    it ''
 
   end
 
