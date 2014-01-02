@@ -3,17 +3,19 @@ require 'httparty'
 module ActiveScraper
   class Fetcher
 
-    def fetch(uri, opts={})
-      if record = fetch_from_cache
+    def fetch(u, opts={})
+      url = convert_uri_object(u)
+
+      if record = fetch_from_cache(url, opts)
         return record
       else
-        return fetch_fresh(uri, opts)
+        return fetch_fresh(url, opts)
       end
     end
 
 
-    def fetch_fresh(uri, opts={})
-
+    def fetch_fresh(u, opts={})
+      url = convert_uri_object(u)
     end
 
 
@@ -27,6 +29,19 @@ module ActiveScraper
     # true or false if ActiveScraper::Request with these parameters exist
     def has_cache?(uri, opts={})
 
+    end
+
+
+    # u can either be a Request object, a String, or Addressable::URI
+    # returns a url String
+    def convert_uri_object(u)
+      if u.is_a?(ActiveScraper::Request)
+        x = u.uri
+      else
+        x = Addressable::URI.parse(u)
+      end
+
+      return x.to_s
     end
 
     # returns an OpenStruct that Response can use

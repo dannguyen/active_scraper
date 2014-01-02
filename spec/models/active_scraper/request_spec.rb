@@ -13,6 +13,11 @@ describe ActiveScraper::Request do
         expect(@params[:host]).to eq 'www.example.com'
       end
 
+      it 'should set scheme' do
+        expect(@params[:scheme]).to eq 'http'
+      end
+
+
       it 'should set path' do
         expect(@params[:path]).to eq '/somewhere/file.json'
       end
@@ -73,7 +78,7 @@ describe ActiveScraper::Request do
       end
     end
   
-    describe '.build_from_uri', focus: true do
+    describe '.build_from_uri' do
       context 'arguments' do
         it 'should take in a string' do 
           @req = Request.build_from_uri("http://example.com")
@@ -103,7 +108,7 @@ describe ActiveScraper::Request do
 
       context 'return value' do
         before do
-          @req = Request.build_from_uri("http://example.com/path.html?query=helloworld")
+          @req = Request.build_from_uri("https://example.com/path.html?query=helloworld")
         end
 
         it 'should return a ActiveScraper::Request object' do
@@ -112,6 +117,7 @@ describe ActiveScraper::Request do
         end
 
         it 'should set the appropriate attributes' do
+          expect(@req.scheme).to eq 'https'
           expect(@req.host).to eq 'example.com'
           expect(@req.path).to eq '/path.html'
           expect(@req.query).to eq 'query=helloworld'
@@ -121,36 +127,26 @@ describe ActiveScraper::Request do
       end
     end
 
+    describe '.build_validating_params' do
+      it 'should be a hash with only the validating params' do
+        params = Request.build_validating_params('http://example.com/path/q=2')
 
-    describe '.create_and_fetch_response', focus: true do
+        expect(params).to be_a Hash
+        expect(params.keys).to include(:scheme, :host, :path, :query)
+        expect(params.keys).not_to include(:is_obfuscated, :extname)
+      end
+    end
+
+    describe '.create_and_fetch_response' do
       context 'arguments' do
-        it 'accepts the same two arguments as .build_request_params' do
-
-        end
+        it 'accepts the same two arguments as .build_request_params'
 
         it 'accepts an optional third argument for a Fetcher instance'
       end
 
-      context 'simple GET request' do
-        context 'integration using Fetcher' do
-          before do
-            @url = 'http://example.com'
-            @f = Fetcher.new
-            @f.stub(:get_fresh)
-          end
+      context 'integration using Fetcher'
+      # see integration for how it works with fetcher
 
-          it 'invokes Fetcher#get_fresh to get a response' do
-
-          pending 'create a webmock'
-            Request.create_and_fetch_response("http://example.com")
-            expect(@f).to receive(:get_fresh).with "http://example.com"
-          end
-        end
-
-        it 'creates a new Request'
-        it 'creates a new Response'
-        it 'relates the request to the response'
-      end
     end
 
     context 'request already exists' do
@@ -186,19 +182,17 @@ describe ActiveScraper::Request do
   end
 
   describe 'scopes' do
-    describe '.with_uri' do
+    describe '.with_url' do
       before do
-        @req = Request.build_from_uri('http://example.com/path')
+        @req = Request.create_from_uri('http://example.com/path')
       end
 
       it 'should scope by normalized uri' do
-        pending
-        expect(Request.with_uri('http://EXAMPLE.com/path')).to eq @req
+        expect(Request.with_url('http://EXAMPLE.com/path').first).to eq @req
       end
 
       it 'should return nil if any semantic part has changed' do
-        pending
-        expect(Request.with_uri('http://example.com/path/')).to be_nil
+        expect(Request.with_url('http://example.com/path/')).to be_empty
       end
 
       describe 'options argument is similar to build_request_params' do 
@@ -223,7 +217,7 @@ describe ActiveScraper::Request do
   end
 
 
-  context 'instance', focus: true do
+  context 'instance' do
     context 'validations' do 
       before do
         @req = Request.create_from_uri 'http://example.com/path/index.html&q=2001&r=hey'
@@ -234,9 +228,9 @@ describe ActiveScraper::Request do
         expect( Request.count).to eq 1
       end
 
-      it 'does not care about scheme' do
+      it 'does care about scheme' do
         Request.create_from_uri 'https://example.com/path/index.html&q=2001&r=hey'
-        expect( Request.count).to eq 1
+        expect( Request.count).to eq 2
       end
 
 
@@ -261,7 +255,11 @@ describe ActiveScraper::Request do
     end
 
     describe '#uri' do
-      it 'should return a Adressable::URI'
+      it 'should return a Adressable::URI' do
+        @req = Request.build_from_uri 'http://example.com?q=z'
+        expect(@req.uri).to be_a Addressable::URI
+        expect(@req.uri.query).to eq 'q=z'
+      end
     end
 
     describe 'obfuscated?' do

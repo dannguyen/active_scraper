@@ -14,14 +14,15 @@
 ActiveRecord::Schema.define(version: 20131229033843) do
 
   create_table "active_scraper_requests", force: true do |t|
+    t.string   "scheme"
     t.string   "host"
     t.text     "query"
     t.string   "path"
     t.string   "meta_tag"
+    t.string   "extname"
     t.boolean  "is_obfuscated"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "extname"
   end
 
   add_index "active_scraper_requests", ["host", "path"], name: "index_active_scraper_requests_on_host_and_path"
