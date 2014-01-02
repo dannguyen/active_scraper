@@ -2,6 +2,11 @@ require 'addressable/uri'
 module ActiveScraper
   class Request < ActiveRecord::Base
     has_many :responses, :dependent => :destroy
+    validates_uniqueness_of :path, scope: [:host, :query]
+
+    def obfuscated?
+      is_obfuscated == true
+    end
 
     def self.build_request_params(uri, opts={})
       u = Addressable::URI.parse(uri)
@@ -29,9 +34,27 @@ module ActiveScraper
       return hsh
     end
 
-    def self.create_from_uri(uri)
-      u = Addressable::URI.parse(uri)
-      # TODO
+    def self.build_from_uri(uri, opts={})
+      request_params = build_request_params(uri, opts)
+      request_obj = Request.new(request_params)
+
+      return request_obj
+    end
+
+
+    def self.create_from_uri(uri, opts={})
+      req = build_from_uri(uri, opts)
+      req.save
+
+      return req
+    end
+
+
+    def self.create_and_fetch_response(uri, opts={}, fetcher = nil)
+      req = build_from_uri(uri, opts)      
+      fetcher = Fetcher.new
+      # this will break
+      fetcher.fetch req
     end
 
   end

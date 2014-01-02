@@ -73,27 +73,42 @@ describe ActiveScraper::Request do
       end
     end
   
-    describe '.create_from_uri', skip: true do
+    describe '.build_from_uri', focus: true do
       context 'arguments' do
         it 'should take in a string' do 
-          @req = Request.create_from_uri("http://example.com")
+          @req = Request.build_from_uri("http://example.com")
           expect(@req.host).to eq 'example.com'
         end
 
         it 'should take in a URI' do
-          @req = Request.create_from_uri(URI.parse 'http://example.com')
+          @req = Request.build_from_uri(URI.parse 'http://example.com')
           expect(@req.host).to eq 'example.com'
+        end
+      end
+
+      context 'Request already exists' do
+        before do
+          @req = Request.build_from_uri(URI.parse 'http://example.com')
+          @req.save
+        end
+
+        it 'should retrieve existing request' do
+          expect(Request.count).to eq 1
+          same_req = Request.build_from_uri(URI.parse 'http://example.com')
+          same_req.save
+
+          expect(Request.count).to eq 1
         end
       end
 
       context 'return value' do
         before do
-          @req = Request.create_from_uri("http://example.com/path.html?query=helloworld")
+          @req = Request.build_from_uri("http://example.com/path.html?query=helloworld")
         end
 
         it 'should return a ActiveScraper::Request object' do
           expect(@req).to be_a Request
-          expect(@req.id).to be_present
+          expect(@req.id).not_to be_present
         end
 
         it 'should set the appropriate attributes' do
@@ -107,29 +122,39 @@ describe ActiveScraper::Request do
     end
 
 
-    describe '.create_and_fetch_response' do
+    describe '.create_and_fetch_response', focus: true do
       context 'arguments' do
-        it 'accepts the same two arguments as .build_request_params'
+        it 'accepts the same two arguments as .build_request_params' do
+
+        end
+
         it 'accepts an optional third argument for a Fetcher instance'
       end
 
-      context 'using Fetcher' do
-        before do
-          @url = 'http://example.com'
-          @f = Fetcher.new
-          @f.stub(:get_fresh)
-        end
-        it 'invokes Fetcher#get_fresh to get a response' do
+      context 'simple GET request' do
+        context 'integration using Fetcher' do
+          before do
+            @url = 'http://example.com'
+            @f = Fetcher.new
+            @f.stub(:get_fresh)
+          end
+
+          it 'invokes Fetcher#get_fresh to get a response' do
 
           pending 'create a webmock'
-          expect(@f).to receive(:get_fresh).with Addressable::URI
+            Request.create_and_fetch_response("http://example.com")
+            expect(@f).to receive(:get_fresh).with "http://example.com"
+          end
         end
+
+        it 'creates a new Request'
+        it 'creates a new Response'
+        it 'relates the request to the response'
       end
+    end
 
-      it 'creates a new Request'
-      it 'creates a new Response'
-      it 'relates the request to the response'
-
+    context 'request already exists' do
+      it 'does not create a new Request/Response'
 
     end
   end
@@ -163,7 +188,7 @@ describe ActiveScraper::Request do
   describe 'scopes' do
     describe '.with_uri' do
       before do
-        @req = Request.create_from_uri('http://example.com/path')
+        @req = Request.build_from_uri('http://example.com/path')
       end
 
       it 'should scope by normalized uri' do
@@ -198,11 +223,40 @@ describe ActiveScraper::Request do
   end
 
 
-  context 'instance' do
+  context 'instance', focus: true do
+    context 'validations' do 
+      before do
+        @req = Request.create_from_uri 'http://example.com/path/index.html&q=2001&r=hey'
+      end
+
+      it 'requires unique path, host, and index' do
+        Request.create_from_uri 'http://example.com/path/index.html&q=2001&r=hey'
+        expect( Request.count).to eq 1
+      end
+
+      it 'does not care about scheme' do
+        Request.create_from_uri 'https://example.com/path/index.html&q=2001&r=hey'
+        expect( Request.count).to eq 1
+      end
+
+
+      it 'will allow new Request if query is in different order' do
+        Request.create_from_uri 'https://example.com/path/index.html?r=hey&q=2001'
+        expect( Request.count).to eq 2
+      end
+     
+    end
 
     context 'attributes' do
       describe ':is_obfuscated' do        
-        it 'should be set on after_save'
+        it 'should be set even before save action' do
+          # this is quirkiness via the build_from_uri factory
+
+          @req = Request.build_from_uri 'http://example.com?privateq=yo', obfuscate_query: [:privateq] 
+          expect(@req.is_obfuscated).to be_true
+          @req.save 
+          expect(@req).to be_obfuscated
+        end
       end
     end
 
