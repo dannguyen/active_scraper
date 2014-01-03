@@ -14,8 +14,8 @@ require 'httparty'
 require 'vcr'
 
 VCR.configure do |c|
-   c.hook_into :webmock
-  c.cassette_library_dir = 'fixtures/vcr_cassettes'
+  c.hook_into :webmock
+  c.cassette_library_dir = File.join File.expand_path('..', __FILE__), 'fixtures/vcr_cassettes'
 end
 
 
