@@ -1,7 +1,7 @@
 require 'addressable/uri'
 module ActiveScraper
   class Request < ActiveRecord::Base
-    has_many :responses, :dependent => :destroy
+    has_many :responses, :dependent => :destroy 
     validates_uniqueness_of :path, scope: [:host, :query, :scheme]
 
 
@@ -74,16 +74,24 @@ module ActiveScraper
 
 
     def self.create_and_fetch_response(uri, opts={}, fetcher = nil)
-      req = find_or_build_from_uri(uri, opts)
+      request = find_or_build_from_uri(uri, opts)
       fetcher = fetcher || Fetcher.new
 
-      if req.id.nil? # this request is new
+      if request.id.nil? 
+        # this request is new
         # so skip to the fresh
-        fetcher.fetch_fresh(req)
+        resp = fetcher.fetch request, fresh: true 
       else 
         # will check the cache and the fresh
-        fetcher.fetch req
+        resp = fetcher.fetch request
       end
+
+      # build the response
+      response = request.responses.build(resp)
+      # theoretically, response will be saved too
+      request.save
+
+      return request
     end
 
   end

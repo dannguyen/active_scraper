@@ -11,10 +11,12 @@ require 'database_cleaner'
 require 'rspec/autorun'
 require 'webmock/rspec'
 require 'httparty'
+require 'vcr'
 
-# VCR.configure do |c|
-#   c.hook_into :webmock # or :fakeweb
-# end
+VCR.configure do |c|
+   c.hook_into :webmock
+  c.cassette_library_dir = 'fixtures/vcr_cassettes'
+end
 
 
 #require 'capybara/rails'

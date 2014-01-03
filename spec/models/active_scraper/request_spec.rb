@@ -138,9 +138,9 @@ describe ActiveScraper::Request do
     end
 
     describe '.create_and_fetch_response' do
-      context 'arguments' do
-        it 'accepts the same two arguments as .build_request_params'
 
+      context 'arguments' do
+        it 'accepts the same two arguments as .build_request_params' 
         it 'accepts an optional third argument for a Fetcher instance'
       end
 

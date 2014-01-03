@@ -4,6 +4,7 @@ module ActiveScraper
     belongs_to :request
     before_save :set_checksum
 
+    
 
     private
     def set_checksum

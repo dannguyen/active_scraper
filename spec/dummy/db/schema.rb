@@ -33,12 +33,12 @@ ActiveRecord::Schema.define(version: 20131229033843) do
     t.text     "headers"
     t.string   "content_type"
     t.integer  "checksum"
-    t.integer  "active_scraper_request_id"
+    t.integer  "request_id"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  add_index "active_scraper_responses", ["active_scraper_request_id", "checksum"], name: "index_request_id_and_checksum"
-  add_index "active_scraper_responses", ["active_scraper_request_id", "created_at"], name: "index_request_id_and_created_at"
+  add_index "active_scraper_responses", ["request_id", "checksum"], name: "index_request_id_and_checksum"
+  add_index "active_scraper_responses", ["request_id", "created_at"], name: "index_request_id_and_created_at"
 
 end
