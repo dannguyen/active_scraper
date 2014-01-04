@@ -4,6 +4,7 @@ require 'addressable/uri'
 module ActiveScraper
   class Request < ActiveRecord::Base
     has_many :responses, :dependent => :destroy 
+    has_one :latest_response, ->{ order('created_at DESC') },  class_name: 'ActiveScraper::Response'
     validates_uniqueness_of :path, scope: [:host, :query, :scheme]
 
 

@@ -199,28 +199,6 @@ describe ActiveScraper::Request do
 
 
 
-  describe 'relationship to responses' do
-    it 'is a has_many'
-
-    describe '#latest' do
-      it 'has_one #latest'
-    end
-
-    describe 'incomplete' do
-      it 'is incomplete if no response exists'
-    end
-
-
-    describe 'dependent=>destroy' do
-      it 'destroys all dependent responses'
-    end
-  end
-
-  describe 'convenience methods' do
-    describe 'last_fetched_at' do
-      it 'delegates to #latest created_at'
-    end
-
   end
 
   describe 'scopes' do
@@ -254,8 +232,36 @@ describe ActiveScraper::Request do
 
 
   describe 'relationship to ActiveScraper::Response' do
-    it 'should be a has_many'
-    it 'should be dependent:destroy'
+    before do
+      @request = Request.build_from_uri 'http://example.com'
+      @request.responses.build({body: 'x'})
+      @request.responses.build({body: 'x'})
+
+      @request.save
+    end
+ 
+    it 'should be a has_many' do
+      expect(@request.responses.count).to eq 2
+    end
+
+    it 'should be dependent:destroy' do
+      @request.destroy
+      expect(Response.count).to eq 0
+    end
+
+    describe '#latest_response' do
+      it 'should be latest by created_at' do
+        expect(@request.latest_response.id).to eq 2
+      end
+
+      describe 'convenience methods' do
+        describe 'last_fetched_at' do
+          it 'delegates to #latest created_at'
+        end
+      end
+
+
+    end
   end
 
 

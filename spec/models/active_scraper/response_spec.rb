@@ -51,6 +51,15 @@ module ActiveScraper
       it 'should be a serialized hash' do
         expect(@r.headers['Server']).to eq 'Apache'
       end
+    end
+
+    context 'relationship to Response' do
+      it 'should belongs_to'
+
+      context 'delegation' do
+        it 'delegates uri'
+
+      end
 
     end
   end
