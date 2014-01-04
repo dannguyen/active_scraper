@@ -14,20 +14,22 @@ module ActiveScraper
         @content_type = obj.content_type
         @headers = obj.each_header.inject({}){|h, (k, v)| h[k] = v; h }
         @code = obj.code.to_i
-      elsif obj.is_a?(ActiveScraper::Request)
+      elsif obj.is_a?(ActiveScraper::Response)
         @body = obj.body
         @content_type = obj.content_type
         @headers = obj.headers
         @code = obj.code.to_i
+      elsif obj.is_a?(StringIO) && obj.respond_to?(:meta) # OpenURI.open
+        @body = obj.read
+        @content_type = obj.content_type
+        @headers = obj.meta
+        @code = obj.status[0].to_i
       else
-        # this is probably not used
-        @body = obj.to_s
-        @headers = {}
-        @content_type = nil
-        @code = nil
+        # other types have to raise an Error
+        raise ArgumentError, 'Improper class type'
       end
 
-      super({})
+      super(ActiveSupport::HashWithIndifferentAccess.new() )
 
       # now set its values
       [:body, :headers, :content_type, :code].each do |a|
