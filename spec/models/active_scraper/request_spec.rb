@@ -17,7 +17,6 @@ describe ActiveScraper::Request do
         expect(@params[:scheme]).to eq 'http'
       end
 
-
       it 'should set path' do
         expect(@params[:path]).to eq '/somewhere/file.json'
       end
@@ -39,7 +38,50 @@ describe ActiveScraper::Request do
         expect(req_params[:host]).to eq 'www.example.com'
       end
 
+      context 'the normalization of query params' do
+        context 'is enabled by default' do
+          describe '.normalize_query_params' do
+            context 'the query is a string' do
+              it 'should alphabetize them' do 
+                nquery = Request.normalize_query_params("id=99&apple=42")
+                expect(nquery).to eq 'apple=42&id=99'
+              end
 
+              it 'should preserve array' do
+                pending ' this is failing, wait for resolution of HTTParty issue' 
+                nquery = Request.normalize_query_params("apple=42&id=99&apple=10")
+                expect(nquery).to eq 'apple=42&apple=10&id=99'
+              end
+            
+              it 'should save blank keys' do
+                nquery = Request.normalize_query_params("cat=&dog=&goat=")
+                expect(nquery).to eq "cat=&dog=&goat="
+              end
+
+              it 'should remove non-used keys' do
+                nquery = Request.normalize_query_params("cat&dog=2&goat&hat")
+                expect(nquery).to eq 'dog=2'
+              end
+            end
+          end
+        end
+
+        context 'as executed by .build_request_params' do
+          before do
+            @url = "http://www.example.com/?zeta=10&alpha=42"
+          end
+
+          it 'normalizes params by default' do
+            r = Request.build_request_params(@url)
+            expect(r[:query]).to eq 'alpha=42&zeta=10'
+          end
+
+          it 'can be disabled via options[:normalize_query] => false' do
+            r = Request.build_request_params(@url, {:normalize_query => false} )
+            expect(r[:query]).to eq 'zeta=10&alpha=42'
+          end
+        end
+      end
 
 
       describe 'options argument' do
@@ -54,7 +96,7 @@ describe ActiveScraper::Request do
             end
 
             it 'should omit the actual value for the given key in @params[:query] with __OMIT__' do
-              expect(@req_params[:query]).to eq "user=dan&password=__OMIT__"
+              expect(@req_params[:query]).to eq "password=__OMIT__&user=dan"
             end
 
             it 'should set :is_obfuscated to true' do
@@ -66,12 +108,12 @@ describe ActiveScraper::Request do
 
             it 'should replace actual value with __OMIT_[last n characters]__' do
               @req_params = Request.build_request_params @url, { obfuscate_query: [[:password, 4]]}
-              expect(@req_params[:query]).to eq "user=dan&password=__OMIT__orld"
+              expect(@req_params[:query]).to eq "password=__OMIT__orld&user=dan"
             end
 
             it 'should work with double array' do
               @req_params = Request.build_request_params @url, { obfuscate_query: [[:password, 4], 'user'] }
-              expect(@req_params[:query]).to eq "user=__OMIT__&password=__OMIT__orld"
+              expect(@req_params[:query]).to eq "password=__OMIT__orld&user=__OMIT__"
             end
           end
         end
@@ -129,7 +171,7 @@ describe ActiveScraper::Request do
 
     describe '.build_validating_params' do
       it 'should be a hash with only the validating params' do
-        params = Request.build_validating_params('http://example.com/path/q=2')
+        params = Request.build_validating_params('http://example.com/path/?q=2')
 
         expect(params).to be_a Hash
         expect(params.keys).to include(:scheme, :host, :path, :query)

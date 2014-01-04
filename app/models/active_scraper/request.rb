@@ -1,4 +1,6 @@
+require 'httparty'
 require 'addressable/uri'
+
 module ActiveScraper
   class Request < ActiveRecord::Base
     has_many :responses, :dependent => :destroy 
@@ -27,24 +29,23 @@ module ActiveScraper
       h.slice(:scheme, :host, :path, :query)
     end
 
+#########################################################
+############ class methods
+    
+
+
     # Returns a Hash with symbolized keys
     def self.build_request_params(uri, opts={})
       u = Addressable::URI.parse(uri)
-      hsh = {scheme: u.normalized_scheme, host: u.normalized_host, path: u.normalized_path, query: u.normalized_query, extname: u.extname}
+      hsh = {scheme: u.normalized_scheme, host: u.normalized_host, path: u.normalized_path, query: u.normalized_query , extname: u.extname}
+
+      # deal with query separately
+      unless opts.delete(:normalize_query) == false
+        hsh[:query] = normalize_query_params(hsh[:query])        
+      end
 
       if ob_keys = opts.delete(:obfuscate_query)
-        Array(ob_keys).each do |key|
-          a = Array(key)
-
-          key_to_omit = Regexp.escape(a[0].to_s)
-          char_num = a[1] || 0
-          
-          if val_to_omit = hsh[:query].match(/(?<=#{key_to_omit}=)(.*?)(?=&|$)/)
-            val = val_to_omit[1]
-            hsh[:query].sub!( val, "__OMIT__#{val[-char_num, char_num]}")
-          end
-        end
-
+        hsh[:query] = obfuscate_query_params(hsh[:query], ob_keys)
         hsh[:is_obfuscated] = true
       else
         hsh[:is_obfuscated] = false
@@ -93,6 +94,42 @@ module ActiveScraper
 
       return request
     end
+
+
+    QUERY_NORMALIZER = HTTParty::Request::NON_RAILS_QUERY_STRING_NORMALIZER
+    # :q is a query String or Hash
+    # e.g.   'z=hello&b=world&a=dog'
+    #    or: {z: ['hello', 'world'], a: 'dog'}
+    #
+    # returns: (String) "a=dog&z=hello&z=world"
+    def self.normalize_query_params(q)
+      return q if q.blank?
+
+      params_hash = CGI.parse(q)
+      params_str = QUERY_NORMALIZER[params_hash]
+
+      return params_str
+    end
+
+
+    private 
+
+    def self.obfuscate_query_params(q, ob_keys)
+      string = q.dup
+      Array(ob_keys).each do |key|
+        a = Array(key)
+
+        key_to_omit = Regexp.escape(a[0].to_s)
+        char_num = a[1] || 0        
+        if val_to_omit = string.match(/(?<=#{key_to_omit}=)(.*?)(?=&|$)/)
+          val = val_to_omit[1]
+          string.sub!( val, "__OMIT__#{val[-char_num, char_num]}")
+        end
+      end
+
+      return string
+    end
+
 
   end
 end
