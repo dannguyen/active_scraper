@@ -3,15 +3,63 @@ require 'spec_helper'
 
 describe ActiveScraper::Request do
   describe 'with Fetcher' do
+
+    describe 'Request.get' do
+      it 'returns an AgnosticResponseObject' do
+      end
+
+      it 'creates/uses a Request'
+      it 'creates/uses a Response'
+
+    end
+
+
+    describe 'Request.post' do
+      it 'invokes Fetcher with a :post' do
+
+      end
+    end
+
     describe 'Request.create_and_fetch_response' do 
+      context 'arguments' do
+        before do
+          @url = 'http://example.com/path.html?q=hello'
+          stub_request(:any, /.*example.*/)
+        end
+        
+
+        it 'returns a BasicObject containing .request and .response' do
+          obj = Request.create_and_fetch_response @url
+          expect(obj.request).to eq Request.first
+          expect(obj.response).to eq Response.first
+        end
+
+        it 'takes in same arguments as .build_from_uri' do   
+          obj = Request.create_and_fetch_response( @url, obfuscate_query: [:q])
+          request = obj.request
+          expect(request.query).to eq 'q=__OMIT__'
+          expect(request.responses).not_to be_empty
+        end
+
+        it 'has optional 3rd argument for Fetcher' do
+          fetcher = double(Fetcher.new)
+          expect(fetcher).to receive(:fetch)
+
+          Request.create_and_fetch_response @url, {}, fetcher
+        end
+
+      end
+
 
       context 'simple GET request' do
         context 'its effects (end-to-end)' do
           before do
             @url = 'http://example.com/path.html?q=hello'
 
-            VCR.use_cassette('example_create_and_fetch') do              
-              @request = Request.create_and_fetch_response @url
+            VCR.use_cassette('example_create_and_fetch') do
+              @created_obj = Request.create_and_fetch_response @url            
+              @request = @created_obj.request
+              @request.reload
             end         
           end
 
@@ -35,7 +83,7 @@ describe ActiveScraper::Request do
 
           context 'the response' do
             before do
-              @response = Response.last
+              @response = @created_obj.response
             end
 
             it 'creates a new Response' do
@@ -45,6 +93,10 @@ describe ActiveScraper::Request do
 
             it 'relates the request to the response' do 
               expect(@response.request).to eq @request
+            end
+
+            it 'should have last_fetched_at set to Response#created_at' do
+              expect(@request.last_fetched_at).to eq @response.created_at
             end
             
             context 'response already exists' do

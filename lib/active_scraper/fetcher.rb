@@ -3,6 +3,16 @@ require 'httparty'
 module ActiveScraper
   class Fetcher
 
+    attr_accessor :http_method
+    def initialize(opts={})
+      opts = opts.stringify_keys
+
+      @http_method = opts.fetch('http_method'){ 'get' }.to_sym
+    end
+
+    def get?; @http_method == :get; end
+    def post?; @http_method == :post; end
+
     def fetch(u, opts={})
       url = convert_uri_object(u)
       force_fresh = opts.delete :fresh
@@ -21,9 +31,10 @@ module ActiveScraper
       opts = opts.stringify_keys
 
       url = url.to_s
-      verb = opts.fetch('verb'){ 'get' }
+      # um, no...
+      #verb = opts.fetch('verb'){ 'get' }
 
-      resp = HTTParty.send(verb, url)
+      resp = HTTParty.send(@http_method, url)
     end
 
 

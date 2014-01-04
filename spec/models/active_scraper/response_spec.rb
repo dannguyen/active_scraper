@@ -56,6 +56,8 @@ module ActiveScraper
     context 'relationship to Response' do
       it 'should belongs_to'
 
+      it 'touches Response#last_fetched_at after_create'
+
       context 'delegation' do
         it 'delegates uri'
 

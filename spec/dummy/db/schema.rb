@@ -23,6 +23,8 @@ ActiveRecord::Schema.define(version: 20131229033843) do
     t.boolean  "is_obfuscated"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.datetime "last_fetched_at"
+
   end
 
   add_index "active_scraper_requests", ["host", "path"], name: "index_active_scraper_requests_on_host_and_path"

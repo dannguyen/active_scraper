@@ -12,6 +12,7 @@ require 'rspec/autorun'
 require 'webmock/rspec'
 require 'httparty'
 require 'vcr'
+require 'timecop'
 
 VCR.configure do |c|
   c.hook_into :webmock
@@ -56,5 +57,6 @@ RSpec.configure do |config|
 
   config.after(:each) do
     DatabaseCleaner.clean
+    VCR.eject_cassette
   end
 end

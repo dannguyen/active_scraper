@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe ActiveScraper::Fetcher, skip: true do
+describe ActiveScraper::Fetcher do
 
   describe 'initialization' do
     it 'initializes without necessary args' do
@@ -36,7 +36,7 @@ describe ActiveScraper::Fetcher, skip: true do
   end
 
 
-  describe 'unitary behavior' do
+  describe '#fetch' do
     before do
       @fetcher = ActiveScraper::Fetcher.new
     end
@@ -49,12 +49,14 @@ describe ActiveScraper::Fetcher, skip: true do
         end
 
         it 'delegates to #fetch_fresh' do  
-          expect(@fetcher).to receive(:fetch_fresh).with('http://url.com', {})       
+          expect(@fetcher).to receive(:fetch_fresh).with(Addressable::URI.parse( 'http://url.com'), {})       
           @fetcher.fetch('http://url.com')
         end
 
         it 'returns with value of #fetch_fresh' do
-          expect(@fetcher.fetch('http://url.com')).to eq 'fresh!'
+          resp = @fetcher.fetch('http://url.com')
+          expect(resp).to be_a AgnosticResponseObject
+          expect(resp.body).to eq 'fresh!'
         end
       end
 
@@ -64,7 +66,11 @@ describe ActiveScraper::Fetcher, skip: true do
         end
 
         it 'should return with value from cache' do
-          expect(@fetcher.fetch('xx.com')).to eq 'cache!'
+          resp = @fetcher.fetch('http://url.com')
+          
+          expect(resp).to be_a AgnosticResponseObject
+          expect(resp.body).to eq 'cache!'
+
         end
       end
     end

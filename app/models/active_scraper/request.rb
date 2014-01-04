@@ -13,6 +13,12 @@ module ActiveScraper
       where(params)
     }
 
+    scope :last_fetched_before, ->(some_time){
+      some_time = Time.parse(some_time) if some_time.is_a?(String)
+
+      where("last_fetched_at < ?", some_time)
+    }
+
 
     def obfuscated?
       is_obfuscated == true
