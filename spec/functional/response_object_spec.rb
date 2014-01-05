@@ -68,8 +68,8 @@ module ActiveScraper
         expect(r.code).to eq 200
       end
 
-      it 'converts ActiveScraper::Response' do
-        r = ResponseObject::Basic.new ActiveScraper::Response.create(body: 'abc', code: 200, headers: @response_hash[:headers])
+      it 'converts ActiveScraper::CachedResponse' do
+        r = ResponseObject::Basic.new ActiveScraper::CachedResponse.create(body: 'abc', code: 200, headers: @response_hash[:headers])
         expect(r.body).to eq 'abc'
         expect(r.headers['Server']).to eq 'Apache' ## Does not actively lower-case header keys
         expect(r.code).to eq 200

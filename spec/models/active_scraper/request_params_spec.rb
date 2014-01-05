@@ -1,12 +1,12 @@
 require 'spec_helper'
 
 module ActiveScraper
-  describe Response do
+  describe CachedRequest do
     describe '.build_request_params' do
       before do
         @url = "http://www.EXAMPLE.com/somewhere/file.json?id=99"
          
-        @params = ActiveScraper::Request.build_request_params(@url)
+        @params = ActiveScraper::CachedRequest.build_request_params(@url)
       end
 
       it 'should set normalized host' do
@@ -34,7 +34,7 @@ module ActiveScraper
       end
 
       it 'also works with a Addressable::URI' do
-        req_params = Request.build_request_params Addressable::URI.parse(@url)
+        req_params = CachedRequest.build_request_params Addressable::URI.parse(@url)
         expect(req_params[:host]).to eq 'www.example.com'
       end
 
@@ -43,23 +43,23 @@ module ActiveScraper
           describe '.normalize_query_params' do
             context 'the query is a string' do
               it 'should alphabetize them' do 
-                nquery = Request.normalize_query_params("id=99&apple=42")
+                nquery = CachedRequest.normalize_query_params("id=99&apple=42")
                 expect(nquery).to eq 'apple=42&id=99'
               end
 
               it 'should preserve array' do
                 pending ' this is failing, wait for resolution of HTTParty issue' 
-                nquery = Request.normalize_query_params("apple=42&id=99&apple=10")
+                nquery = CachedRequest.normalize_query_params("apple=42&id=99&apple=10")
                 expect(nquery).to eq 'apple=42&apple=10&id=99'
               end
             
               it 'should save blank keys' do
-                nquery = Request.normalize_query_params("cat=&dog=&goat=")
+                nquery = CachedRequest.normalize_query_params("cat=&dog=&goat=")
                 expect(nquery).to eq "cat=&dog=&goat="
               end
 
               it 'should remove non-used keys' do
-                nquery = Request.normalize_query_params("cat&dog=2&goat&hat")
+                nquery = CachedRequest.normalize_query_params("cat&dog=2&goat&hat")
                 expect(nquery).to eq 'dog=2'
               end
             end
@@ -72,12 +72,12 @@ module ActiveScraper
           end
 
           it 'normalizes params by default' do
-            r = Request.build_request_params(@url)
+            r = CachedRequest.build_request_params(@url)
             expect(r[:query]).to eq 'alpha=42&zeta=10'
           end
 
           it 'can be disabled via options[:normalize_query] => false' do
-            r = Request.build_request_params(@url, {:normalize_query => false} )
+            r = CachedRequest.build_request_params(@url, {:normalize_query => false} )
             expect(r[:query]).to eq 'zeta=10&alpha=42'
           end
         end
@@ -92,7 +92,7 @@ module ActiveScraper
         describe ':obfuscate_query' do        
           context 'key is just a key' do       
             before do
-              @req_params = Request.build_request_params @url, { obfuscate_query: :password }
+              @req_params = CachedRequest.build_request_params @url, { obfuscate_query: :password }
             end
 
             it 'should omit the actual value for the given key in @params[:query] with __OMIT__' do
@@ -107,12 +107,12 @@ module ActiveScraper
           context 'key is an Array' do
 
             it 'should replace actual value with __OMIT_[last n characters]__' do
-              @req_params = Request.build_request_params @url, { obfuscate_query: [[:password, 4]]}
+              @req_params = CachedRequest.build_request_params @url, { obfuscate_query: [[:password, 4]]}
               expect(@req_params[:query]).to eq "password=__OMIT__orld&user=dan"
             end
 
             it 'should work with double array' do
-              @req_params = Request.build_request_params @url, { obfuscate_query: [[:password, 4], 'user'] }
+              @req_params = CachedRequest.build_request_params @url, { obfuscate_query: [[:password, 4], 'user'] }
               expect(@req_params[:query]).to eq "password=__OMIT__orld&user=__OMIT__"
             end
           end

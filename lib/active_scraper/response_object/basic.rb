@@ -18,7 +18,7 @@ module ActiveScraper
           @content_type = obj.content_type
           @headers = obj.each_header.inject({}){|h, (k, v)| h[k] = v; h }
           @code = obj.code.to_i
-        elsif obj.is_a?(ActiveScraper::Response)
+        elsif obj.is_a?(ActiveScraper::CachedResponse)
           @body = obj.body
           @content_type = obj.content_type
           @headers = obj.headers

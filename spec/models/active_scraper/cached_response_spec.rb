@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module ActiveScraper
-  describe Response do
+  describe CachedResponse do
     describe '.build_from_response_object' do
       context 'given a regular HTTParty-like object' do
         before do
@@ -12,12 +12,12 @@ module ActiveScraper
 
           @resp_obj = ResponseObject.factory_fresh HTTParty.get(@url)
           
-          @response = Response.build_from_response_object(@resp_obj)
+          @response = CachedResponse.build_from_response_object(@resp_obj)
         end
 
         it 'should be a Response record' do
 
-          expect(@response).to be_a ActiveScraper::Response
+          expect(@response).to be_a ActiveScraper::CachedResponse
         end
 
         it 'should save content_type' do
@@ -41,7 +41,7 @@ module ActiveScraper
 
     context 'attributes' do 
       before do
-        @r = Response.create(body: "x", headers: {'Server' => 'Apache'})
+        @r = CachedResponse.create(body: "x", headers: {'Server' => 'Apache'})
       end
 
       it 'should set checksum during save process' do

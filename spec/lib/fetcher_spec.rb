@@ -67,7 +67,7 @@ describe ActiveScraper::Fetcher do
 
       context 'cached scrape does exist' do
         before do
-          @fetcher.stub(:perform_cache_request){ ActiveScraper::Response.create(body: 'from cache!') }
+          @fetcher.stub(:perform_cache_request){ ActiveScraper::CachedResponse.create(body: 'from cache!') }
           @cache_resp = @fetcher.fetch(@url)         
         end
 

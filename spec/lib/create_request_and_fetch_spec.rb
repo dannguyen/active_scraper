@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 
-describe ActiveScraper::Request do
+module ActiveScraper
 
  
   describe 'ActiveScraper.create_request_and_fetch_response' do 
@@ -12,10 +12,10 @@ describe ActiveScraper::Request do
       end
       
 
-      it 'returns a BasicObject containing .request and .response' do
+      it 'returns an object containing .request and .response' do
         obj = ActiveScraper.create_request_and_fetch_response @url
-        expect(obj.request).to eq Request.first
-        expect(obj.response).to eq Response.first
+        expect(obj.request).to eq CachedRequest.first
+        expect(obj.response).to eq CachedResponse.first
       end
 
       it 'takes in same arguments as .build_from_uri' do   
@@ -53,25 +53,25 @@ describe ActiveScraper::Request do
           end
 
           it 'has request and response and they are records' do
-            expect(@created_obj.request).to be_an ActiveScraper::Request
-            expect(@created_obj.response).to be_an ActiveScraper::Response
+            expect(@created_obj.request).to be_an ActiveScraper::CachedRequest
+            expect(@created_obj.response).to be_an ActiveScraper::CachedResponse
           end
         end
 
         context 'the request' do 
           it 'creates a new Request' do
-            expect(Request.count).to eq 1
+            expect(CachedRequest.count).to eq 1
           end
 
           it 'returns a created Request' do
-            expect(@request).to be_a ActiveScraper::Request
+            expect(@request).to be_a ActiveScraper::CachedRequest
           end
 
           it 'attaches a Response to the Request' do
             expect(@request.responses.count).to eq 1
             resp = @request.responses.first
 
-            expect(resp).to be_a ActiveScraper::Response
+            expect(resp).to be_a ActiveScraper::CachedResponse
             expect(resp.id).to be_present
           end
         end
@@ -142,7 +142,7 @@ describe ActiveScraper::Request do
           before do
             @f = Fetcher.new
             @url = "http://example.com"
-            @req = Request.create_from_uri(@url)
+            @req = CachedRequest.create_from_uri(@url)
           end
 
           it 'sends Request record along to :fetch' do
@@ -154,7 +154,7 @@ describe ActiveScraper::Request do
 
           it 'should not create a new Request record' do
             ActiveScraper.create_request_and_fetch_response(@url, {}, @f)
-            expect(Request.count).to eq 1
+            expect(CachedRequest.count).to eq 1
           end
         end
 
@@ -163,7 +163,7 @@ describe ActiveScraper::Request do
           before do
             @url = 'http://example.com/path.html?q=hello'
             stub_request(:any, /.*example.*/)
-            @req = Request.create_from_uri(@url)
+            @req = CachedRequest.create_from_uri(@url)
             @resp = @req.responses.create  ResponseObject::Basic.new( HTTParty.get(@url) )
             @obj = ActiveScraper.create_request_and_fetch_response(@url)
 
@@ -175,7 +175,7 @@ describe ActiveScraper::Request do
           end
 
           it 'should not create a new Response' do
-            expect(Response.count).to eq 1
+            expect(CachedResponse.count).to eq 1
           end
 
           it 'should return the existing requests latest response' do

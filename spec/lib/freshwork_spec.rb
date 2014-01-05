@@ -19,13 +19,22 @@ module ActiveScraper
       @response = ActiveScraper.get(@url)
     end
 
-    it 'returns a ActiveScraper::Response' do
-      expect(@response).to be_a ActiveScraper::Response
+    context 'the front-end' do
+      it 'returns a ActiveScraper::Response' do
+        expect(@response).to be_a ActiveScraper::Response
+        expect(@response).to be_a HTTParty::Response
+      end
     end
 
-    it 'creates/uses a Request'
-    it 'creates/uses a Response'
-
+    context 'the backend' do 
+      it 'creates/uses a CachedRequest' do 
+        expect(CachedRequest.count).to eq 1
+      end
+      
+      it 'creates/uses a CachedResponse' do
+        expect(CachedResponse.count).to eq 1
+      end
+    end
   end
 
 

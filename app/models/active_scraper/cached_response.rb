@@ -1,10 +1,17 @@
 module ActiveScraper
-  class Response < ActiveRecord::Base
+  class CachedResponse < ActiveRecord::Base
     serialize :headers, Hash
-    belongs_to :request, touch: true
+    belongs_to :request, touch: true, class_name: 'CachedRequest', foreign_key: 'cached_request_id'
     before_save :set_checksum
     after_create :touch_request_fetched_at
 
+    def to_fake_party_hash
+      [:body, :headers, :content_type, :code].inject(Hashie::Mash.new) do |hsh, att|
+        hsh[att] = self.send(att)
+
+        hsh
+      end
+    end
 
 
 
@@ -14,6 +21,7 @@ module ActiveScraper
 
       true
     end
+
 
     def touch_request_fetched_at
       if request && !request.new_record?

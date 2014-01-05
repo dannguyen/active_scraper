@@ -1,4 +1,5 @@
 require "active_scraper/engine"
+require 'active_scraper/response'
 require 'active_scraper/response_object'
 require 'active_scraper/fetcher'
 require "active_scraper/cachework"
@@ -11,7 +12,7 @@ module ActiveScraper
 
   # TODO: probably should be moved into another module
   def self.create_request_and_fetch_response(uri, opts={}, fetcher = nil)
-    request = Request::find_or_build_from_uri(uri, opts)
+    request = CachedRequest::find_or_build_from_uri(uri, opts)
     fetcher = fetcher || Fetcher.new
 
     if resp = ActiveScraper.find_cache_for_request(request)

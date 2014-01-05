@@ -13,14 +13,14 @@ module ActiveScraper
         # diversion
       end
 
-      @request = Request.first
+      @request = CachedRequest.first
       ## just a red herring that confirms latest_response is working
-      @request.responses.create( ResponseObject::Basic.new(Response.first) )
+      @request.responses.create( ResponseObject::Basic.new(CachedResponse.first) )
     end
 
     it 'should be sane because i like redundant tests' do
-      expect(Response.count).to eq 2
-      expect(Response.first.request).to eq @request
+      expect(CachedResponse.count).to eq 2
+      expect(CachedResponse.first.request).to eq @request
     end
 
     describe '.find_cache_for_request' do 
@@ -45,7 +45,7 @@ module ActiveScraper
     context 'edge cases' do
       context 'Request exists, but has no Response' do        
         it 'should return nil' do
-          Response.delete_all
+          CachedResponse.delete_all
 
           expect(ActiveScraper.find_cache_for_request(@request)).to be_nil
         end
@@ -53,7 +53,7 @@ module ActiveScraper
 
       context 'the Response exists but does not belong to Request' do                  
         it 'should still return nil' do
-          Response.all.each{|r| r.update_attributes(request_id: 99)}
+          CachedResponse.all.each{|r| r.update_attributes(cached_request_id: 99)}
           expect(ActiveScraper.find_cache_for_request(@request)).to be_nil
         end
       end       

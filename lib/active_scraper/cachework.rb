@@ -3,7 +3,7 @@ module ActiveScraper
     # :r can be a Request, a URI, or a String
 
     def find_cache_for_request(r, opts={})
-      if request = ActiveScraper::Request.matching_request(r).first
+      if request = ActiveScraper::CachedRequest.matching_request(r).first
         return request.latest_response
       end
     end

@@ -11,14 +11,14 @@ describe "functional scraping example" do
       it 'saves a new Request'
       it 'saves a new Response belonging to Request'
     
-      it 'returns a ActiveScraper::Response object'
+      it 'returns a ActiveScraper::CachedResponse object'
       it 'returns a Nokogiri::XML::Document if call is made to #fetch_parsed_body'
     end
   end
 
 
   context 'on scrapes when cache is warm' do
-    it 'returns existing ActiveScraper::Response object'
+    it 'returns existing ActiveScraper::CachedResponse object'
     it ''
 
   end

@@ -1,44 +1,44 @@
 require 'spec_helper'
 
-describe ActiveScraper::Request do
+describe ActiveScraper::CachedRequest do
   describe 'class method conveniences' do 
     
   
     describe '.build_from_uri' do
       context 'arguments' do
         it 'should take in a string' do 
-          @req = Request.build_from_uri("http://example.com")
+          @req = CachedRequest.build_from_uri("http://example.com")
           expect(@req.host).to eq 'example.com'
         end
 
         it 'should take in a URI' do
-          @req = Request.build_from_uri(URI.parse 'http://example.com')
+          @req = CachedRequest.build_from_uri(URI.parse 'http://example.com')
           expect(@req.host).to eq 'example.com'
         end
       end
 
-      context 'Request already exists' do
+      context 'CachedRequest already exists' do
         before do
-          @req = Request.build_from_uri(URI.parse 'http://example.com')
+          @req = CachedRequest.build_from_uri(URI.parse 'http://example.com')
           @req.save
         end
 
         it 'should retrieve existing request' do
-          expect(Request.count).to eq 1
-          same_req = Request.build_from_uri(URI.parse 'http://example.com')
+          expect(CachedRequest.count).to eq 1
+          same_req = CachedRequest.build_from_uri(URI.parse 'http://example.com')
           same_req.save
 
-          expect(Request.count).to eq 1
+          expect(CachedRequest.count).to eq 1
         end
       end
 
       context 'return value' do
         before do
-          @req = Request.build_from_uri("https://example.com/path.html?query=helloworld")
+          @req = CachedRequest.build_from_uri("https://example.com/path.html?query=helloworld")
         end
 
-        it 'should return a ActiveScraper::Request object' do
-          expect(@req).to be_a Request
+        it 'should return a ActiveScraper::CachedRequest object' do
+          expect(@req).to be_a CachedRequest
           expect(@req.id).not_to be_present
         end
 
@@ -55,7 +55,7 @@ describe ActiveScraper::Request do
 
     describe '.build_validating_params' do
       it 'should be a hash with only the validating params' do
-        params = Request.build_validating_params('http://example.com/path/?q=2')
+        params = CachedRequest.build_validating_params('http://example.com/path/?q=2')
 
         expect(params).to be_a Hash
         expect(params.keys).to include(:scheme, :host, :path, :query)
@@ -67,21 +67,21 @@ describe ActiveScraper::Request do
   describe 'scopes' do
     describe '.with_url / .matching_request' do
       before do
-        @req = Request.create_from_uri('http://example.com/path')
+        @req = CachedRequest.create_from_uri('http://example.com/path')
       end
 
       it 'should scope by normalized uri' do
-        expect(Request.with_url('http://EXAMPLE.com/path').first).to eq @req
+        expect(CachedRequest.with_url('http://EXAMPLE.com/path').first).to eq @req
       end
 
       it 'should return nil if any semantic part has changed' do
-        expect(Request.with_url('http://example.com/path/')).to be_empty
+        expect(CachedRequest.with_url('http://example.com/path/')).to be_empty
       end
 
 
-      it 'should accept a ActiveScraper::Request as argument' do
-        expect(Request.with_url(@req).first).to eq @req
-        expect(Request.matching_request(@req).first).to eq @req
+      it 'should accept a ActiveScraper::CachedRequest as argument' do
+        expect(CachedRequest.with_url(@req).first).to eq @req
+        expect(CachedRequest.matching_request(@req).first).to eq @req
       end
 
       describe 'options argument is similar to build_request_params' do 
@@ -100,23 +100,23 @@ describe ActiveScraper::Request do
       it 'returns requests with responses that were created_at BEFORE given date' do
 
         Timecop.travel(10.days.ago) do
-          @request_a = Request.create_from_uri 'http://a.com'
-          @request_b = Request.create_from_uri 'http://b.com'
-          ActiveScraper::Response.create(request_id: @request_a.id)
+          @request_a = CachedRequest.create_from_uri 'http://a.com'
+          @request_b = CachedRequest.create_from_uri 'http://b.com'
+          ActiveScraper::CachedResponse.create(cached_request_id: @request_a.id)
         end
 
-        ActiveScraper::Response.create(request_id: @request_b.id)
+        ActiveScraper::CachedResponse.create(cached_request_id: @request_b.id)
 
-        expect(Request.last_fetched_before(5.days.ago)).to eq [@request_a]
+        expect(CachedRequest.last_fetched_before(5.days.ago)).to eq [@request_a]
 
       end
     end
   end
 
 
-  describe 'relationship to ActiveScraper::Response' do
+  describe 'relationship to ActiveScraper::CachedResponse' do
     before do
-      @request = Request.build_from_uri 'http://example.com'
+      @request = CachedRequest.build_from_uri 'http://example.com'
       @request.responses.build({body: 'x'})
       @request.responses.build({body: 'x'})
       @request.save
@@ -129,7 +129,7 @@ describe ActiveScraper::Request do
 
     it 'should be dependent:destroy' do
       @request.destroy
-      expect(Response.count).to eq 0
+      expect(CachedResponse.count).to eq 0
     end
 
     describe '#latest_response' do
@@ -151,23 +151,23 @@ describe ActiveScraper::Request do
   context 'instance' do
     context 'validations' do 
       before do
-        @req = Request.create_from_uri 'http://example.com/path/index.html&q=2001&r=hey'
+        @req = CachedRequest.create_from_uri 'http://example.com/path/index.html&q=2001&r=hey'
       end
 
       it 'requires unique path, host, and index' do
-        Request.create_from_uri 'http://example.com/path/index.html&q=2001&r=hey'
-        expect( Request.count).to eq 1
+        CachedRequest.create_from_uri 'http://example.com/path/index.html&q=2001&r=hey'
+        expect( CachedRequest.count).to eq 1
       end
 
       it 'does care about scheme' do
-        Request.create_from_uri 'https://example.com/path/index.html&q=2001&r=hey'
-        expect( Request.count).to eq 2
+        CachedRequest.create_from_uri 'https://example.com/path/index.html&q=2001&r=hey'
+        expect( CachedRequest.count).to eq 2
       end
 
 
-      it 'will allow new Request if query is in different order' do
-        Request.create_from_uri 'https://example.com/path/index.html?r=hey&q=2001'
-        expect( Request.count).to eq 2
+      it 'will allow new CachedRequest if query is in different order' do
+        CachedRequest.create_from_uri 'https://example.com/path/index.html?r=hey&q=2001'
+        expect( CachedRequest.count).to eq 2
       end
      
     end
@@ -177,7 +177,7 @@ describe ActiveScraper::Request do
         it 'should be set even before save action' do
           # this is quirkiness via the build_from_uri factory
 
-          @req = Request.build_from_uri 'http://example.com?privateq=yo', obfuscate_query: [:privateq] 
+          @req = CachedRequest.build_from_uri 'http://example.com?privateq=yo', obfuscate_query: [:privateq] 
           expect(@req.is_obfuscated).to be_true
           @req.save 
           expect(@req).to be_obfuscated
@@ -187,7 +187,7 @@ describe ActiveScraper::Request do
 
     describe '#uri' do
       it 'should return a Adressable::URI' do
-        @req = Request.build_from_uri 'http://example.com?q=z'
+        @req = CachedRequest.build_from_uri 'http://example.com?q=z'
         expect(@req.uri).to be_a Addressable::URI
         expect(@req.uri.query).to eq 'q=z'
       end

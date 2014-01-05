@@ -3,9 +3,9 @@ require 'addressable/uri'
 require 'hashie/mash'
 
 module ActiveScraper
-  class Request < ActiveRecord::Base
-    has_many :responses, :dependent => :destroy 
-    has_one :latest_response, ->{ order('created_at DESC') },  class_name: 'ActiveScraper::Response'
+  class CachedRequest < ActiveRecord::Base
+    has_many :responses, :dependent => :destroy, class_name: 'CachedResponse', foreign_key: 'cached_request_id' 
+    has_one :latest_response, ->{ order('created_at DESC') },  class_name: 'ActiveScraper::CachedResponse', foreign_key: 'cached_request_id'
     validates_uniqueness_of :path, scope: [:host, :query, :scheme]
 
     delegate :to_s, :to => :uri
@@ -15,10 +15,10 @@ module ActiveScraper
     }
 
     scope :matching_request, ->(req){
-      if req.is_a?(Request)
+      if req.is_a?(CachedRequest)
         req = req.to_uri
       end
-      params = Request.build_validating_params(req)
+      params = CachedRequest.build_validating_params(req)
 
       where(params)
     }
@@ -29,9 +29,24 @@ module ActiveScraper
       where("last_fetched_at < ?", some_time)
     }
 
+    def to_fake_party_hash
+      h = Hashie::Mash.new(self.attributes.symbolize_keys.slice(:scheme, :host, :path, :query))
+      h[:uri] = self.standard_uri
+      h[:options] ||= {}
+      h[:headers] ||= {}
+
+      return h
+    end
+
+
 
     def obfuscated?
       is_obfuscated == true
+    end
+
+    # to follow HTTParty conventions
+    def standard_uri
+      URI.parse(uri)
     end
 
     def uri
@@ -77,7 +92,7 @@ module ActiveScraper
 
     def self.build_from_uri(uri, opts={})
       request_params = build_request_params(uri, opts)
-      request_obj = Request.new(request_params)
+      request_obj = CachedRequest.new(request_params)
 
       return request_obj
     end
