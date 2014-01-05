@@ -14,21 +14,24 @@ module ActiveScraper
     request = Request::find_or_build_from_uri(uri, opts)
     fetcher = fetcher || Fetcher.new
 
-    if request.id.nil? 
-      # this request is new
-      # so skip to the fresh
-      resp = fetcher.fetch_fresh request 
-    else 
-      # will check the cache and the fresh
-      resp = fetcher.fetch request
+    if resp = ActiveScraper.find_cache_for_request(request)
+      # this request already exists and so does its response
+      # TODO: This is weird, because Fetcher uses ActiveScraper.find_cache_for_request
+       #  so something here is redundant...
+      is_fresh = false
+      response = resp
+    else
+      # this request may/may not exist, but it doesn't have a response,
+      #  so skip to the fresh
+      is_fresh = true
+      resp = fetcher.fetch_fresh( request )       
+      response = request.responses.build(resp)
+      request.save      
     end
 
-    # build the response
-    response = request.responses.build(resp)
-    # theoretically, response will be saved too
-    request.save 
+     
          
-    obj = Hashie::Mash.new(request: request, response: response)
+    obj = Hashie::Mash.new(request: request, response: response, :fresh? => is_fresh )
 
     return obj
   end

@@ -8,10 +8,17 @@ module ActiveScraper
       opts = opts.stringify_keys
 
       @http_method = opts.fetch('http_method'){ 'get' }.to_sym
+      @last_fetched_before = opts.fetch('last_fetched_before'){ Time.at(0) }
     end
 
     def get?; @http_method == :get; end
     def post?; @http_method == :post; end
+
+    def last_fetched_before
+      @last_fetched_before = Time.parse(@last_fetched_before) if @last_fetched_before.is_a?(String)
+
+      @last_fetched_before
+    end
 
     def fetch(request, opts={})
       options = opts.stringify_keys
@@ -58,7 +65,6 @@ module ActiveScraper
 
     def perform_cache_request(req, opts={})
       ActiveScraper.find_cache_for_request(req)
-      # do something TODO
     end
 
     def build_factory_cache(obj)

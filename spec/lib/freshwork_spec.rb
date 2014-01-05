@@ -13,6 +13,30 @@ module ActiveScraper
   end
 
 
-  describe 'get'
-  describe 'post'
+  describe 'ActiveScraper.get' do
+    before do
+      @url = 'http://www.example.com'
+      @response = ActiveScraper.get(@url)
+    end
+
+    it 'returns a ActiveScraper::Response' do
+      expect(@response).to be_a ActiveScraper::Response
+    end
+
+    it 'creates/uses a Request'
+    it 'creates/uses a Response'
+
+  end
+
+
+  describe 'ActiveScraper.post' do
+    it 'invokes Fetcher with a :post' do
+
+    end
+  end
+
+
+
+
+
 end

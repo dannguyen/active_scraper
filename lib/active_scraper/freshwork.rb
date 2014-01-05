@@ -2,6 +2,6 @@ require "active_scraper/freshwork/http"
 
 module ActiveScraper
   module Freshwork
-    extend Freshwork::HTTP
+    include Freshwork::HTTP
   end
 end
