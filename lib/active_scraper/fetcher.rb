@@ -3,12 +3,14 @@ require 'httparty'
 module ActiveScraper
   class Fetcher
 
-    attr_accessor :http_method
+    attr_accessor :http_method, :options
     def initialize(opts={})
       opts = opts.stringify_keys
 
-      @http_method = opts.fetch('http_method'){ 'get' }.to_sym
-      @last_fetched_before = opts.fetch('last_fetched_before'){ Time.at(0) }
+      @http_method = opts.delete('http_method') || :get
+      @last_fetched_before = opts.delete 'last_fetched_before' : Time.at(0)
+
+      @options = opts
     end
 
     def get?; @http_method == :get; end

@@ -6,7 +6,6 @@ module ActiveScraper
     before do
       @url = 'http://example.com'
       @response_hash = {:body => "abc", :status => 200, :headers => {'Content-Type' => 'text/html', 'Server' => 'Apache', 'Content-Length' => 3 }}
-
       stub_request(:get, 'http://example.com').to_return(@response_hash)        
     end
 

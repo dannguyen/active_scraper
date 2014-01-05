@@ -11,8 +11,9 @@ require 'database_cleaner'
 require 'rspec/autorun'
 require 'webmock/rspec'
 require 'httparty'
-require 'vcr'
 require 'timecop'
+
+require 'vcr'
 
 VCR.configure do |c|
   c.hook_into :webmock

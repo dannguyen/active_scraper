@@ -1,8 +1,8 @@
 require 'httparty'
 
 module ActiveScraper
-  class Response < HTTParty::Response
-
+  class Response < SimpleDelegator
+    
 
     def initialize(request, response, parsed_block=nil, options={})
       request = request.to_fake_party_hash if request.is_a?(CachedRequest)
@@ -12,7 +12,7 @@ module ActiveScraper
 
       parsed_block ||= ->(){ response.body }
 
-      super(request, response, parsed_block, options)
+      super(HTTParty::Response.new request, response, parsed_block, options)      
     end
 
   end
