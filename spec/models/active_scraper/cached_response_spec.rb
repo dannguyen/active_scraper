@@ -10,7 +10,7 @@ module ActiveScraper
             :body => "abc", :headers => { 'content-length' => 3, 'content-type'=>'text/html', "server"=>'Apache' }
           )
 
-          @resp_obj = ResponseObject.factory_fresh HTTParty.get(@url)
+          @resp_obj = ResponseObject.factory HTTParty.get(@url)
           
           @response = CachedResponse.build_from_response_object(@resp_obj)
         end

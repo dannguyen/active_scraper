@@ -29,6 +29,14 @@ module ActiveScraper
       where("last_fetched_at < ?", some_time)
     }
 
+    def latest_response_fetched_after(time)
+      if latest_response.present?
+        return latest_response if latest_response.created_at > time
+      end
+      
+      nil      
+    end
+
     def to_fake_party_hash
       h = Hashie::Mash.new(self.attributes.symbolize_keys.slice(:scheme, :host, :path, :query))
       h[:uri] = self.standard_uri

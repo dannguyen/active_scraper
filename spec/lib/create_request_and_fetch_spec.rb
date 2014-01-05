@@ -11,7 +11,6 @@ module ActiveScraper
         stub_request(:any, /.*example.*/)
       end
       
-
       it 'returns an object containing .request and .response' do
         obj = ActiveScraper.create_request_and_fetch_response @url
         expect(obj.request).to eq CachedRequest.first
@@ -24,14 +23,6 @@ module ActiveScraper
         expect(request.query).to eq 'q=__OMIT__'
         expect(request.responses).not_to be_empty
       end
-
-      it 'has optional 3rd argument for Fetcher' do
-        fetcher = double(Fetcher.new)
-        expect(fetcher).to receive(:fetch_fresh)
-
-        ActiveScraper.create_request_and_fetch_response @url, {}, fetcher
-      end
-
     end
 
 
@@ -48,9 +39,6 @@ module ActiveScraper
         end
 
         context 'the returned object' do
-          it 'is fresh?' do           
-            expect(@created_obj).to be_fresh           
-          end
 
           it 'has request and response and they are records' do
             expect(@created_obj.request).to be_an ActiveScraper::CachedRequest
@@ -100,60 +88,22 @@ module ActiveScraper
         end
       end
 
-      describe 'the messages sent to Fetcher' do
+      describe 'the messages sent' do
         before do
           @url = 'http://example.com/'
           stub_request(:any, @url)            
         end        
 
-        context 'this is an entirely new request' do
-          it 'sends to :fetch_fresh' do
-            @f = double(Fetcher.new)            
-
-            @f.stub(:fetch_fresh)
-            expect(@f).to receive(:fetch_fresh)
-
-            ActiveScraper.create_request_and_fetch_response(@url, {}, @f)            
-          end
-
-          it 'does not attempt Fetcher#fetch_from_cache, which can accept a Request' do
-            pending 'who cares? we just care if object is fresh? delete this test'
-            @f.stub(:fetch)
-            @f.stub(:fetch_fresh)
-            @f.stub(:fetch_from_cache)
-            expect(@f).not_to receive(:fetch_from_cache)
-
-            ActiveScraper.create_request_and_fetch_response("http://example.com", {}, @f)            
-          end
-
-          it 'gets sent to Fetcher#get_fresh to get a response'  do
-            pending 'who cares? we just care if object is fresh? delete this test'
-
-            expect(@f).to receive(:fetch_fresh) do |uri|
-              expect(uri).to be_a Addressable::URI
-              expect(uri.to_s).to eq @url
-            end
-
-            ActiveScraper.create_request_and_fetch_response("http://example.com", {}, @f)
-          end
-        end
 
         context '@url exists as a Request' do
           before do
-            @f = Fetcher.new
             @url = "http://example.com"
             @req = CachedRequest.create_from_uri(@url)
           end
 
-          it 'sends Request record along to :fetch' do
-            @f.stub(:fetch_fresh)
-            expect(@f).to receive(:fetch_fresh).with(@req)
-
-            ActiveScraper.create_request_and_fetch_response(@url, {}, @f)
-          end
 
           it 'should not create a new Request record' do
-            ActiveScraper.create_request_and_fetch_response(@url, {}, @f)
+            ActiveScraper.create_request_and_fetch_response(@url, {})
             expect(CachedRequest.count).to eq 1
           end
         end
@@ -170,9 +120,6 @@ module ActiveScraper
             @response = @obj.response
           end
 
-          it 'should return an object that is not #fresh?' do
-            expect(@obj).not_to be_fresh
-          end
 
           it 'should not create a new Response' do
             expect(CachedResponse.count).to eq 1

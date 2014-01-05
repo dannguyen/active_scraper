@@ -1,42 +1,88 @@
 require "active_scraper/engine"
 require 'active_scraper/response'
 require 'active_scraper/response_object'
-require 'active_scraper/fetcher'
-require "active_scraper/cachework"
-require "active_scraper/freshwork"
 
 module ActiveScraper
-  extend ActiveScraper::Cachework
-  extend ActiveScraper::Freshwork
 
 
-  # TODO: probably should be moved into another module
-  def self.create_request_and_fetch_response(uri, opts={}, fetcher = nil)
-    request = CachedRequest::find_or_build_from_uri(uri, opts)
-    fetcher = fetcher || Fetcher.new
 
-    if resp = ActiveScraper.find_cache_for_request(request)
-      # this request already exists and so does its response
-      # TODO: This is weird, because Fetcher uses ActiveScraper.find_cache_for_request
-       #  so something here is redundant...
-      is_fresh = false
-      response = resp
-    else
-      # this request may/may not exist, but it doesn't have a response,
-      #  so skip to the fresh
-      is_fresh = true
-      resp = fetcher.fetch_fresh( request )       
-      response = request.responses.build(resp)
-      request.save      
-    end
+  def self.get(uri, options={})
+    o = create_request_and_fetch_response(uri, options)
 
-     
-         
-    obj = Hashie::Mash.new(request: request, response: response, :fresh? => is_fresh )
-
-    return obj
+    return build_usable_response(o.request, o.response)
   end
 
 
+
+  # delegates to CachedRequest::find_or_build_from_uri
+  #   req (URI or String). If CachedRequest, is idempotent
+  #   
+  # returns a new or existing CachedRequest
+  def self.find_or_build_request(req, opts={})
+    opts = normalize_hash(opts)
+
+    CachedRequest.find_or_build_from_uri(req, opts)
+  end
+
+  ## cached_request (CachedRequest) => the request to find a response for
+  ##
+  ## returns a new or existing CachedResponse
+
+  def self.find_or_build_response(cached_request, opts={})
+    raise ArgumentError, "Only accepted CachedRequest, but was passed in a #{cached_request.class}" unless cached_request.is_a?(CachedRequest)
+    opts = normalize_hash(opts)
+
+    response = CachedResponse.find_cache_for_cached_request(cached_request, opts)
+
+    if response.blank?
+      fetched_obj = fetch_fresh(cached_request.uri, opts)
+      response = CachedResponse.build_from_response_object(fetched_obj)
+    end
+
+    return response
+  end
+
+
+  def self.create_request_and_fetch_response(uri, opts={})
+    opts = normalize_hash(opts)
+    # first, find or build the request
+    request = find_or_build_request(uri, opts)
+    # then find or build a matching response
+    response = find_or_build_response(request, opts)
+    # associate and save the two
+    request.responses << response
+    request.save
+     
+    obj = Hashie::Mash.new(request: request, response: response)
+    
+    return obj
+  end
+
+  def self.build_usable_response(request, response)
+    ActiveScraper::Response.new(request, response)
+  end
+
+
+
+  def self.fetch_fresh(url, opts={})
+     r = HTTParty.get(url, opts)
+
+     return build_factory_fresh(r)
+  end
+
+
+  def build_factory_fresh(obj)
+    ActiveScraper::ResponseObject.factory(obj)
+  end
+
+
+
+  def self.normalize_hash(hsh)
+    unless hsh.is_a?(HashWithIndifferentAccess)
+     hsh = HashWithIndifferentAccess.new(hsh) 
+   end
+
+   return hsh
+  end
 
 end

@@ -65,4 +65,3 @@ module ActiveScraper
 end
 
 
-require_relative './fetched'

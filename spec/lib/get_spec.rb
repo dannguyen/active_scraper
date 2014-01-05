@@ -47,7 +47,8 @@ module ActiveScraper
   end
 
 
-  describe 'ActiveScraper.post' do
+  # DEPRECATE: we don't need post
+  describe 'ActiveScraper.post', skip: true do
     before do
       @url = 'http://www.example.com/'
       stub_request(:post, @url).with( body: "please post").to_return({:body => "posted!", :status => 200})    

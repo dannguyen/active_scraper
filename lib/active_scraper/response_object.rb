@@ -4,14 +4,9 @@ module ActiveScraper
   module ResponseObject
 
 
-    def self.factory_cache(obj, meta={})
-      Fetched.from_cache(obj, meta)
+    def self.factory(obj)
+      ActiveScraper::ResponseObject::Basic.new(obj)
     end
-
-    def self.factory_fresh(obj, meta={})
-      Fetched.from_fresh(obj, meta)
-    end
-
 
 
   end

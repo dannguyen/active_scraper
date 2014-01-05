@@ -80,29 +80,6 @@ module ActiveScraper
     end
 
 
-    describe ResponseObject::Fetched do
-      it 'is a subclass of Basic' do
-        expect(ResponseObject::Fetched < ResponseObject::Basic).to be_true
-      end
-
-      context 'class factory and fresh?' do
-        describe '.from_fresh' do
-          it 'should be fresh?' do
-            f = ResponseObject::Fetched.from_fresh HTTParty.get(@url)
-            expect(f).to be_fresh
-          end
-        end
-        
-        describe '.from_cache' do
-          it 'should not be #fresh?' do
-            f = ResponseObject::Fetched.from_cache HTTParty.get(@url)
-            expect(f).not_to be_fresh
-          end
-        end
-      end
-    end
-
-
 
   end
 end
