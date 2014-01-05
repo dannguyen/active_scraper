@@ -13,64 +13,63 @@ module ActiveScraper
     def get?; @http_method == :get; end
     def post?; @http_method == :post; end
 
-    def fetch(u, opts={})
-      url = convert_uri_object(u)
-      force_fresh = opts.delete :fresh
-
-      if force_fresh != true && (record = fetch_from_cache(url, opts))
-        resp_obj = record
+    def fetch(request, opts={})
+      options = opts.stringify_keys
+            
+      if options.delete 'cache_only' == true # only check the cache 
+        resp_obj = build_factory_cache    perform_cache_request(request, options)
+      elsif options.delete 'fresh' == true # only go for a fresh request
+        resp_obj = build_factory_fresh    perform_fresh_request(request, options)
       else
-        resp_obj = fetch_fresh(url, opts)
+        # check cache, then check fresh
+        resp_obj = if (x = perform_cache_request(request, options))
+          build_factory_cache(x)
+        else
+          build_factory_fresh    perform_fresh_request(request, options)
+        end
       end
 
-      build_response_object(resp_obj)
+      return resp_obj
+    end
+
+    # simple convenience wrapper
+    def fetch_fresh(u, opts={})
+      options = opts.stringify_keys
+      options['fresh'] = true
+
+      fetch(u, options)
+    end
+
+    def fetch_cache(u, opts={})
+      options = opts.stringify_keys
+      options['force_cache'] = true
+
+      fetch(u, options)
+    end
+
+    private
+
+    def perform_fresh_request(req, opts={})
+      url = req.to_s
+
+      resp = HTTParty.send(@http_method, url, opts)
     end
 
 
-    def fetch_fresh(url, opts={})
-      opts = opts.stringify_keys
+    def perform_cache_request(req, opts={})
+      ActiveScraper.find_cache_for_request(req)
+      # do something TODO
+    end
 
-      url = url.to_s
-      # um, no...
-      #verb = opts.fetch('verb'){ 'get' }
+    def build_factory_cache(obj)
+      ActiveScraper::ResponseObject.factory_cache(obj)
+    end
 
-      resp = HTTParty.send(@http_method, url)
+    def build_factory_fresh(obj)
+      ActiveScraper::ResponseObject.factory_fresh(obj)
     end
 
 
-    # returns: 
-    #   single ScrapeCache if a valid ActiveScraper::Request exists
-    #   
-    def fetch_from_cache(uri, opts={})
-
-    end
-
-    # true or false if ActiveScraper::Request with these parameters exist
-    def has_cache?(uri, opts={})
-
-    end
-
-
-    # u can either be a Request object, a String, or Addressable::URI
-    # returns an Addressable::URI
-    def convert_uri_object(u)
-      if u.is_a?(ActiveScraper::Request)
-        x = u.uri
-      else
-        x = Addressable::URI.parse(u)
-      end
-
-      return x
-    end
-
-    def build_response_object(obj)
-      self.class.build_response_object(obj)
-    end
-
-    # returns an OpenStruct that Response can use
-    def self.build_response_object(obj)
-      return AgnosticResponseObject.new(obj)
-    end
 
   end
 end

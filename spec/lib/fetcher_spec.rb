@@ -38,39 +38,49 @@ describe ActiveScraper::Fetcher do
 
   describe '#fetch' do
     before do
+      @url = 'http://url.com'
+      
+
       @fetcher = ActiveScraper::Fetcher.new
     end
 
-    describe 'delegation to cache and fresh fetchers' do
-      context 'cached scrape does not exist' do
+    describe 'what it does based on cached records' do
+      context 'when cached scrape does not exist' do
         before do
-          @fetcher.stub(:fetch_from_cache){ nil }
-          @fetcher.stub(:fetch_fresh){ "fresh!" }
+          stub_request(:any, @url).to_return(:body => "fresh!", :status => 200)
+          @fetcher.stub(:perform_fresh_request){ HTTParty.get(@url)}
+          @resp = @fetcher.fetch(@url)
         end
 
-        it 'delegates to #fetch_fresh' do  
-          expect(@fetcher).to receive(:fetch_fresh).with(Addressable::URI.parse( 'http://url.com'), {})       
-          @fetcher.fetch('http://url.com')
+        it 'returns a ResponseObject' do  
+          expect(@resp).to be_a ActiveScraper::ResponseObject::Fetched
         end
 
-        it 'returns with value of #fetch_fresh' do
-          resp = @fetcher.fetch('http://url.com')
-          expect(resp).to be_a AgnosticResponseObject
-          expect(resp.body).to eq 'fresh!'
+        it 'should be #fresh?' do
+          expect(@resp).to be_fresh
+        end
+
+        it 'gets fresh body' do
+          expect(@resp.body).to eq 'fresh!'
         end
       end
 
       context 'cached scrape does exist' do
         before do
-          @fetcher.stub(:fetch_from_cache){ 'cache!' }
+          @fetcher.stub(:perform_cache_request){ ActiveScraper::Response.create(body: 'from cache!') }
+          @cache_resp = @fetcher.fetch(@url)         
         end
 
-        it 'should return with value from cache' do
-          resp = @fetcher.fetch('http://url.com')
-          
-          expect(resp).to be_a AgnosticResponseObject
-          expect(resp.body).to eq 'cache!'
+        it 'should convert cache object into a ResponseObject::Fetched' do
+          expect(@cache_resp).to be_a ActiveScraper::ResponseObject::Fetched
+        end
 
+        it 'gets fresh cache' do
+          expect(@cache_resp.body).to eq 'from cache!'
+        end
+
+        it 'should not be #fresh?' do 
+          expect(@cache_resp).not_to be_fresh
         end
       end
     end

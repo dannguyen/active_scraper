@@ -1,5 +1,6 @@
 require 'httparty'
 require 'addressable/uri'
+require 'hashie/mash'
 
 module ActiveScraper
   class Request < ActiveRecord::Base
@@ -7,9 +8,18 @@ module ActiveScraper
     has_one :latest_response, ->{ order('created_at DESC') },  class_name: 'ActiveScraper::Response'
     validates_uniqueness_of :path, scope: [:host, :query, :scheme]
 
+    delegate :to_s, :to => :uri
 
     scope :with_url, ->(u){     
-      params = Request.build_validating_params(u)
+      matching_request(u)
+    }
+
+    scope :matching_request, ->(req){
+      if req.is_a?(Request)
+        req = req.to_uri
+      end
+      params = Request.build_validating_params(req)
+
       where(params)
     }
 
@@ -25,6 +35,10 @@ module ActiveScraper
     end
 
     def uri
+      to_uri
+    end
+
+    def to_uri
       Addressable::URI.new(
         self.attributes.symbolize_keys.slice(:scheme, :host, :path, :query)
       )
@@ -80,27 +94,6 @@ module ActiveScraper
       return req
     end
 
-
-    def self.create_and_fetch_response(uri, opts={}, fetcher = nil)
-      request = find_or_build_from_uri(uri, opts)
-      fetcher = fetcher || Fetcher.new
-
-      if request.id.nil? 
-        # this request is new
-        # so skip to the fresh
-        resp = fetcher.fetch request, fresh: true 
-      else 
-        # will check the cache and the fresh
-        resp = fetcher.fetch request
-      end
-
-      # build the response
-      response = request.responses.build(resp)
-      # theoretically, response will be saved too
-      request.save
-
-      return request
-    end
 
 
     QUERY_NORMALIZER = HTTParty::Request::NON_RAILS_QUERY_STRING_NORMALIZER

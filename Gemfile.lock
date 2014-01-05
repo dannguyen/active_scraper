@@ -3,6 +3,7 @@ PATH
   specs:
     active_scraper (0.0.1)
       addressable
+      hashie
       httparty
       nokogiri
 
@@ -45,6 +46,7 @@ GEM
     database_cleaner (1.0.1)
     diff-lcs (1.2.5)
     erubis (2.7.0)
+    hashie (2.0.5)
     hike (1.2.3)
     httparty (0.12.0)
       json (~> 1.8)

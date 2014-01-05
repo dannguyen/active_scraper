@@ -65,7 +65,7 @@ describe ActiveScraper::Request do
   end
 
   describe 'scopes' do
-    describe '.with_url' do
+    describe '.with_url / .matching_request' do
       before do
         @req = Request.create_from_uri('http://example.com/path')
       end
@@ -76,6 +76,12 @@ describe ActiveScraper::Request do
 
       it 'should return nil if any semantic part has changed' do
         expect(Request.with_url('http://example.com/path/')).to be_empty
+      end
+
+
+      it 'should accept a ActiveScraper::Request as argument' do
+        expect(Request.with_url(@req).first).to eq @req
+        expect(Request.matching_request(@req).first).to eq @req
       end
 
       describe 'options argument is similar to build_request_params' do 

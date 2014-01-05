@@ -10,8 +10,8 @@ module ActiveScraper
             :body => "abc", :headers => { 'content-length' => 3, 'content-type'=>'text/html', "server"=>'Apache' }
           )
 
-          @resp_obj = Fetcher.build_response_object HTTParty.get(@url)
-          # set up webmock
+          @resp_obj = ResponseObject.factory_fresh HTTParty.get(@url)
+          
           @response = Response.build_from_response_object(@resp_obj)
         end
 

@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
   s.add_dependency "httparty"
   s.add_dependency "nokogiri"
   s.add_dependency 'addressable'
+  s.add_dependency 'hashie'
   s.add_development_dependency 'minitest' # just because it conflicts with rspec right now
   s.add_development_dependency "database_cleaner", '=1.0.1'
   s.add_development_dependency "sqlite3"

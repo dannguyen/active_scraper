@@ -2,10 +2,10 @@ require 'spec_helper'
 
 
 describe ActiveScraper::Request do
-  describe 'with Fetcher' do
+  describe 'Freshwork' do
 
     describe 'Request.get' do
-      it 'returns an AgnosticResponseObject' do
+      it 'returns an ResponseObject::Basic' do
       end
 
       it 'creates/uses a Request'
@@ -20,7 +20,7 @@ describe ActiveScraper::Request do
       end
     end
 
-    describe 'Request.create_and_fetch_response' do 
+    describe 'ActiveScraper.create_request_and_fetch_response' do 
       context 'arguments' do
         before do
           @url = 'http://example.com/path.html?q=hello'
@@ -29,13 +29,13 @@ describe ActiveScraper::Request do
         
 
         it 'returns a BasicObject containing .request and .response' do
-          obj = Request.create_and_fetch_response @url
+          obj = ActiveScraper.create_request_and_fetch_response @url
           expect(obj.request).to eq Request.first
           expect(obj.response).to eq Response.first
         end
 
         it 'takes in same arguments as .build_from_uri' do   
-          obj = Request.create_and_fetch_response( @url, obfuscate_query: [:q])
+          obj = ActiveScraper.create_request_and_fetch_response( @url, obfuscate_query: [:q])
           request = obj.request
           expect(request.query).to eq 'q=__OMIT__'
           expect(request.responses).not_to be_empty
@@ -43,9 +43,9 @@ describe ActiveScraper::Request do
 
         it 'has optional 3rd argument for Fetcher' do
           fetcher = double(Fetcher.new)
-          expect(fetcher).to receive(:fetch)
+          expect(fetcher).to receive(:fetch_fresh)
 
-          Request.create_and_fetch_response @url, {}, fetcher
+          ActiveScraper.create_request_and_fetch_response @url, {}, fetcher
         end
 
       end
@@ -57,7 +57,7 @@ describe ActiveScraper::Request do
             @url = 'http://example.com/path.html?q=hello'
 
             VCR.use_cassette('example_create_and_fetch') do
-              @created_obj = Request.create_and_fetch_response @url            
+              @created_obj = ActiveScraper.create_request_and_fetch_response @url            
               @request = @created_obj.request
               @request.reload
             end         
@@ -108,51 +108,57 @@ describe ActiveScraper::Request do
         describe 'the messages sent to Fetcher' do
           before do
             @url = 'http://example.com/'
-            @f = Fetcher.new
+            stub_request(:any, @url)            
           end        
 
           context 'this is an entirely new request' do
-            it 'attempts Fetcher#fetch first, which can accept a Request' do
-              @f.stub(:fetch)
-              expect(@f).to receive(:fetch)
+            it 'sends to :fetch_fresh' do
+              @f = double(Fetcher.new)            
 
-              Request.create_and_fetch_response("http://example.com", {fresh: true}, @f)            
+              @f.stub(:fetch_fresh)
+              expect(@f).to receive(:fetch_fresh)
+
+              ActiveScraper.create_request_and_fetch_response(@url, {}, @f)            
             end
 
-
             it 'does not attempt Fetcher#fetch_from_cache, which can accept a Request' do
+              pending 'who cares? we just care if object is fresh? delete this test'
+              @f.stub(:fetch)
               @f.stub(:fetch_fresh)
               @f.stub(:fetch_from_cache)
               expect(@f).not_to receive(:fetch_from_cache)
 
-              Request.create_and_fetch_response("http://example.com", {fresh: true}, @f)            
+              ActiveScraper.create_request_and_fetch_response("http://example.com", {}, @f)            
             end
 
             it 'gets sent to Fetcher#get_fresh to get a response'  do
-              @f.stub(:fetch_fresh)
+              pending 'who cares? we just care if object is fresh? delete this test'
 
               expect(@f).to receive(:fetch_fresh) do |uri|
                 expect(uri).to be_a Addressable::URI
                 expect(uri.to_s).to eq @url
               end
 
-              Request.create_and_fetch_response("http://example.com", {fresh: true}, @f)
+              ActiveScraper.create_request_and_fetch_response("http://example.com", {}, @f)
             end
           end
 
-          context '@url exists as a request' do
+          context '@url exists as a Request' do
             before do
+              @f = Fetcher.new
+              @url = "http://example.com"
               @req = Request.create_from_uri(@url)
+            end
+
+            it 'sends Request record along to :fetch' do
               @f.stub(:fetch)
-            end
-
-            it 'sends to :fetch' do
               expect(@f).to receive(:fetch).with(@req)
-              Request.create_and_fetch_response("http://example.com", {}, @f)
+
+              ActiveScraper.create_request_and_fetch_response(@url, {}, @f)
             end
 
-            it 'should not create a new request' do
-              Request.create_and_fetch_response("http://example.com", {}, @f)
+            it 'should not create a new Request record' do
+              ActiveScraper.create_request_and_fetch_response(@url, {}, @f)
               expect(Request.count).to eq 1
             end
           end
