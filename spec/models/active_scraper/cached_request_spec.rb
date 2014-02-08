@@ -64,6 +64,11 @@ describe ActiveScraper::CachedRequest do
     end
   end
 
+  describe 'clear_query' do 
+    it 'should have a temporary @clear_query attr_readable'
+
+  end
+
   describe 'scopes' do
     describe '.with_url / .matching_request' do
       before do

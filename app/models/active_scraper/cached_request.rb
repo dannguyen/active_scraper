@@ -8,6 +8,8 @@ module ActiveScraper
     has_one :latest_response, ->{ order('created_at DESC') },  class_name: 'ActiveScraper::CachedResponse', foreign_key: 'cached_request_id'
     validates_uniqueness_of :path, scope: [:host, :query, :scheme]
 
+    attr_reader :clear_query
+
     delegate :to_s, :to => :uri
 
     scope :with_url, ->(u){     
@@ -101,7 +103,7 @@ module ActiveScraper
     def self.build_from_uri(uri, opts={})
       request_params = build_request_params(uri, opts)
       request_obj = CachedRequest.new(request_params)
-
+      
       return request_obj
     end
 

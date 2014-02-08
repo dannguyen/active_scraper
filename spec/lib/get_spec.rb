@@ -44,8 +44,28 @@ module ActiveScraper
         expect(CachedRequest.count).to eq 1
       end
     end
-  end
 
+
+    context 'options (end-to-end)' do
+      context 'Request options' do
+        describe ':obfuscate_query' do 
+          it 'should return a request with obfuscated query'
+          pending "THIS WILL CURRENTLY FAIL"
+        end
+      end
+
+      context 'Response options' do
+        describe ':fetched_after' do
+          it 'should return latest_response'
+
+          context 'if latest_response is older than fetched_after' do
+            it 'should return a new response, with correct created_time'
+
+          end
+        end
+      end
+    end
+  end
 
   # DEPRECATE: we don't need post
   describe 'ActiveScraper.post', skip: true do

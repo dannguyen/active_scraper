@@ -33,7 +33,7 @@ module ActiveScraper
 
 ############## class methods
     def self.find_cache_for_cached_request(cached_request, opts={})
-       time = opts[:last_fetched_before] || Time.at(0)
+       time = opts[:fetched_after] || Time.at(0)
        # smell: just goes back to CachedRequest
        cached_request.latest_response_fetched_after(time)       
     end
