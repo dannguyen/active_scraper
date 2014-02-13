@@ -1,17 +1,17 @@
 # encoding: UTF-8
 
 require "active_scraper/engine"
-require 'active_scraper/response'
+require 'active_scraper/fake_http_party_response'
 require 'active_scraper/response_object'
 
 module ActiveScraper
 
 
-
+  # returns a ActiveScraper::CachedResponse
   def self.get(uri, options={})
     o = create_request_and_fetch_response(uri, options)
 
-    return build_usable_response(o.request, o.response)
+    return o.response
   end
 
 
@@ -21,8 +21,6 @@ module ActiveScraper
   #   
   # returns a new or existing CachedRequest
   def self.find_or_build_request(req, opts={})
-    opts = normalize_hash(opts)
-
     CachedRequest.find_or_build_from_uri(req, opts)
   end
 
@@ -60,10 +58,10 @@ module ActiveScraper
     return obj
   end
 
-  # Returns an object compatible with HTTParty, i.e. an ActiveScraper::Response
+  # Returns an object compatible with HTTParty, i.e. an ActiveScraper::FakeHTTPartyResponse
   # to be deprecated
   def self.build_usable_response(request, response)
-    ActiveScraper::Response.new(request, response)
+    ActiveScraper::FakeHTTPartyResponse.new(request, response)
   end
 
 
@@ -79,10 +77,10 @@ module ActiveScraper
 
   def self.normalize_hash(hsh)
     unless hsh.is_a?(HashWithIndifferentAccess)
-     hsh = HashWithIndifferentAccess.new(hsh) 
-   end
+      hsh = HashWithIndifferentAccess.new(hsh) 
+    end
 
-   return hsh
+    return hsh
   end
 
 end

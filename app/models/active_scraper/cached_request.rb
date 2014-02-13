@@ -8,19 +8,20 @@ module ActiveScraper
     has_one :latest_response, ->{ order('created_at DESC') },  class_name: 'ActiveScraper::CachedResponse', foreign_key: 'cached_request_id'
     validates_uniqueness_of :path, scope: [:host, :query, :scheme]
 
-    attr_reader :clear_query
+    attr_accessor :unobfuscated_query
 
     delegate :to_s, :to => :uri
 
+    # problematic
     scope :with_url, ->(u){     
       matching_request(u)
     }
 
-    scope :matching_request, ->(req){
+    scope :matching_request, ->(req, opts={}){
       if req.is_a?(CachedRequest)
         req = req.to_uri
       end
-      params = CachedRequest.build_validating_params(req)
+      params = CachedRequest.build_validating_params(req, opts)
 
       where(params)
     }
@@ -63,10 +64,12 @@ module ActiveScraper
       to_uri
     end
 
+    # during a fresh query, we need to actually use the unobfuscated_query
     def to_uri
-      Addressable::URI.new(
-        self.attributes.symbolize_keys.slice(:scheme, :host, :path, :query)
-      )
+      h = self.attributes.symbolize_keys.slice(:scheme, :host, :path)
+      h[:query] = self.unobfuscated_query || self.query
+
+      return Addressable::URI.new(h)
     end
 
     def self.build_validating_params(uri, opts={})
@@ -84,13 +87,13 @@ module ActiveScraper
     def self.build_request_params(uri, opts={})
       u = Addressable::URI.parse(uri)
       hsh = {scheme: u.normalized_scheme, host: u.normalized_host, path: u.normalized_path, query: u.normalized_query , extname: u.extname}
-
       # deal with query separately
-      unless opts.delete(:normalize_query) == false
+      unless opts[:normalize_query] == false
         hsh[:query] = normalize_query_params(hsh[:query])        
       end
 
-      if ob_keys = opts.delete(:obfuscate_query)
+      hsh[:unobfuscated_query] = hsh[:query]
+      if ob_keys = opts[:obfuscate_query]
         hsh[:query] = obfuscate_query_params(hsh[:query], ob_keys)
         hsh[:is_obfuscated] = true
       else
@@ -103,15 +106,15 @@ module ActiveScraper
     def self.build_from_uri(uri, opts={})
       request_params = build_request_params(uri, opts)
       request_obj = CachedRequest.new(request_params)
-      
+
       return request_obj
     end
 
     def self.find_or_build_from_uri(uri, opts={})
-      self.with_url(uri).first || self.build_from_uri(uri, opts)
+      self.matching_request(uri, opts).first || self.build_from_uri(uri, opts)
     end
 
-
+1
     def self.create_from_uri(uri, opts={})
       req = build_from_uri(uri, opts)
       req.save

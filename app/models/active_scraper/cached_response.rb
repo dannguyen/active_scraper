@@ -3,7 +3,9 @@ module ActiveScraper
   class CachedResponse < ActiveRecord::Base
     serialize :headers, Hash
     belongs_to :request, touch: true, class_name: 'CachedRequest', foreign_key: 'cached_request_id'
+    before_create :encode_body_for_create
     before_save :set_checksum
+
     after_create :touch_request_fetched_at
 
     def to_fake_party_hash
@@ -14,19 +16,54 @@ module ActiveScraper
       end
     end
 
-    def parsed_body
-      @_parsedbody ||= Nokogiri::HTML(body)
+
+    def binary?
+      content_type =~ /pdf|image/ || !text?
     end
 
+    def json?
+      content_type =~ /json/
+    end
 
+    def html?
+      content_type =~ /html/
+    end
 
-    # converts @body to utf-8 if not already
-    def encode_body_to_utf8!
-      e = detect_encoding
-      if e !~ /utf-8/i
-        self.body = self.body.encode('utf-8', e)
+    def xml?
+      html? || content_type =~ /xml/
+    end
+
+    def text?
+      content_type =~ /text/ || xml? || json?
+    end
+
+    def body_changed?
+      self.changed_attributes.keys.include?('body')
+    end
+
+    def body
+      b = read_attribute(:body)
+      if b.present? && binary? && !body_changed?
+        return Base64.decode64(b)
+      else
+        return b
       end
     end
+ 
+    def parsed_body
+      @_parsedbody ||= if xml?
+        Nokogiri::HTML(body)
+      elsif json?
+        JSON.parse(body)
+      else
+        body
+      end
+    end
+
+    def to_s
+      body
+    end
+
 
 
     private
@@ -49,8 +86,28 @@ module ActiveScraper
     # expects @body to be populated
     # returns string: e.g. 'utf-8', 'windows-1251'
     def detect_encoding
-      parsed_body.encoding
+      if xml?
+        parsed_body.encoding
+      else
+        body.encoding
+      end
     end
+
+    # converts @body to utf-8 if not already
+    def encode_body_for_create
+      if self.body.present?        
+        if binary?
+          self.body = Base64.encode64(self.body)
+        elsif
+          denc = detect_encoding
+          self.body = self.body.encode('utf-8', denc)
+        end
+      end 
+
+      true
+    end
+
+
 
 
 
@@ -71,8 +128,6 @@ module ActiveScraper
       [:body, :headers, :content_type, :code].each do |att|
         response.send :write_attribute, att, resp.send(att)
       end
-
-      response.encode_body_to_utf8!
 
       return response
     end

@@ -1,7 +1,7 @@
 require 'httparty'
 require 'nokogiri'
 module ActiveScraper
-  class Response < SimpleDelegator
+  class FakeHTTPartyResponse < SimpleDelegator
     
 
     def initialize(request, response, parsed_block=nil, options={})

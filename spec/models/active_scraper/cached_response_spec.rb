@@ -9,9 +9,7 @@ module ActiveScraper
           stub_request(:get, @url).to_return( 
             :body => "abc", :headers => { 'content-length' => 3, 'content-type'=>'text/html', "server"=>'Apache' }
           )
-
-          @resp_obj = ResponseObject.factory HTTParty.get(@url)
-          
+          @resp_obj = ResponseObject.factory HTTParty.get(@url)          
           @response = CachedResponse.build_from_response_object(@resp_obj)
         end
 
@@ -26,6 +24,10 @@ module ActiveScraper
 
         it 'should save body' do
           expect(@response.body).to eq 'abc'
+        end
+
+        it 'should have parsed_body helper' do
+          expect(@response.parsed_body).to be_a Nokogiri::XML::Node
         end
 
         it 'should have a status code' do 

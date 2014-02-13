@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module ActiveScraper
-  describe ActiveScraper::Response do
+  describe ActiveScraper::FakeHTTPartyResponse do
 
     before do 
       @url = 'http://example.com/path.html?q=hello'
@@ -13,7 +13,7 @@ module ActiveScraper
       @cached_request = obj.request
       @cached_response = obj.response
       @actual_httparty_response = HTTParty.get(@url)
-      @response = ActiveScraper::Response.new(@cached_request, @cached_response)
+      @response = ActiveScraper::FakeHTTPartyResponse.new(@cached_request, @cached_response)
     end
 
 

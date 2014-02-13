@@ -64,8 +64,8 @@ describe ActiveScraper::CachedRequest do
     end
   end
 
-  describe 'clear_query' do 
-    it 'should have a temporary @clear_query attr_readable'
+  describe 'unobfuscated_query' do 
+    it 'should have a temporary @unobfuscated_query attr_readable'
 
   end
 
@@ -191,7 +191,7 @@ describe ActiveScraper::CachedRequest do
     end
 
     describe '#uri' do
-      it 'should return a Adressable::URI' do
+      it 'should return an Addressable::URI' do
         @req = CachedRequest.build_from_uri 'http://example.com?q=z'
         expect(@req.uri).to be_a Addressable::URI
         expect(@req.uri.query).to eq 'q=z'
