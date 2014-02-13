@@ -67,13 +67,9 @@ module ActiveScraper
   def self.fetch_fresh(url, opts={})
      r = HTTParty.get(url, opts)
 
-     return build_factory_fresh(r)
+     return ActiveScraper::ResponseObject.factory(obj)
   end
 
-
-  def build_factory_fresh(obj)
-    ActiveScraper::ResponseObject.factory(obj)
-  end
 
 
 
