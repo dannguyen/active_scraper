@@ -1,3 +1,4 @@
+require 'nokogiri'
 module ActiveScraper
   class CachedResponse < ActiveRecord::Base
     serialize :headers, Hash
@@ -13,6 +14,19 @@ module ActiveScraper
       end
     end
 
+    def parsed_body
+      @_parsedbody ||= Nokogiri::HTML(body)
+    end
+
+
+
+    # converts @body to utf-8 if not already
+    def encode_body_to_utf8!
+      e = detect_encoding
+      if e !~ /utf-8/i
+        self.body = self.body.encode('utf-8', e)
+      end
+    end
 
 
     private
@@ -31,6 +45,15 @@ module ActiveScraper
       true
     end
 
+
+    # expects @body to be populated
+    # returns string: e.g. 'utf-8', 'windows-1251'
+    def detect_encoding
+      parsed_body.encoding
+    end
+
+
+
 ############## class methods
     def self.find_cache_for_cached_request(cached_request, opts={})
        time = opts[:fetched_after] || Time.at(0)
@@ -42,11 +65,14 @@ module ActiveScraper
       # TODO
     end
 
+    # has one side-effect: :body is properly encoded
     def self.build_from_response_object(resp)
       response = self.new
       [:body, :headers, :content_type, :code].each do |att|
         response.send :write_attribute, att, resp.send(att)
       end
+
+      response.encode_body_to_utf8!
 
       return response
     end

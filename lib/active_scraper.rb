@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 require "active_scraper/engine"
 require 'active_scraper/response'
 require 'active_scraper/response_object'
@@ -58,6 +60,8 @@ module ActiveScraper
     return obj
   end
 
+  # Returns an object compatible with HTTParty, i.e. an ActiveScraper::Response
+  # to be deprecated
   def self.build_usable_response(request, response)
     ActiveScraper::Response.new(request, response)
   end
@@ -65,9 +69,9 @@ module ActiveScraper
 
 
   def self.fetch_fresh(url, opts={})
-     r = HTTParty.get(url, opts)
+     resp = HTTParty.get(url, opts)
 
-     return ActiveScraper::ResponseObject.factory(obj)
+     return ActiveScraper::ResponseObject.factory(resp)
   end
 
 

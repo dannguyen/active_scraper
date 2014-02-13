@@ -1,5 +1,5 @@
 require 'httparty'
-
+require 'nokogiri'
 module ActiveScraper
   class Response < SimpleDelegator
     
@@ -14,6 +14,8 @@ module ActiveScraper
 
       super(HTTParty::Response.new request, response, parsed_block, options)      
     end
+
+
 
   end
 end
