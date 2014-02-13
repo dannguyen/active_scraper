@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    active_scraper (0.0.1)
+    active_scraper (0.0.2)
       addressable
       hashie
       httparty
